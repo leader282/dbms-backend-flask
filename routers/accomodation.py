@@ -22,7 +22,7 @@ def get_accomodation():
         with psycopg2.connect(**config) as conn:
             with conn.cursor() as cur:
                 # Executing the selected query
-                cur.execute(f"SELECT * FROM accomodated_at WHERE participant_id='{user_id}';")
+                cur.execute(f"SELECT location, check_in, check_out, food_type, cost, payment_status FROM accomodated_at, logistics WHERE participant_id='{user_id}' and accomodated_at.logistics_id = logistics.id;")
                 rows = cur.fetchall()
                 if not rows:
                     return jsonify({'details': ''}), 200
@@ -38,16 +38,18 @@ def book_accomodation():
     user_details = get_jwt_header()
     user_id = user_details['sid']
     data = request.get_json()
-    # accomodation_datails = {}
-    # accomodation_datails['location'] = data['location']
-    # accomodation_datails['check_in'] = data['from']
-    # accomodation_datails['check_out'] = data['to']
-    # accomodation_datails['food_type'] = data['food_type']
-    # accomodation_datails['payment'] = data['payment']
 
     try:
         with psycopg2.connect(**config) as conn:
             with conn.cursor() as cur:
+                try:
+                    cur.execute(f"SELECT * FROM accomodated_at WHERE participant_id='{user_id}';")
+                    rows = cur.fetchall()
+                    if rows:
+                        return jsonify({'message': 'User already has accomodation'}), 404
+                except (Exception, psycopg2.DatabaseError) as error:
+                    print(error)
+                    return jsonify({'message': 'Error accomodating user'}), 404
                 # Executing the selected query
                 cur.execute(f"SELECT * FROM logistics WHERE location='{data['location']}' and check_in = '{data['from']}' and check_out = '{data['to']}' and food_type = '{data['food_type']}';")
                 rows = cur.fetchall()
