@@ -1,5 +1,5 @@
 from flask import Flask, request, jsonify
-from flask_bcrypt import Bcrypt
+import bcrypt
 from flask_jwt_extended import JWTManager, create_access_token, jwt_required
 import psycopg2
 from config import load_config
@@ -12,7 +12,6 @@ CORS(app)
 load_dotenv()
 
 app.config['JWT_SECRET_KEY'] = os.environ.get('JWT_SECRET_KEY')                     # Change this to a random secret in production
-bcrypt = Bcrypt(app)
 jwt = JWTManager(app)
 
 # Mock user database
@@ -50,9 +49,12 @@ def hello():
 @app.route('/signup_student', methods=['POST'])
 def signup_student():
     data = request.get_json()
-    hashed_password = bcrypt.hashpw(data['password'].encode('utf-8'), bcrypt.gensalt())
+    # hashed_password = bcrypt.hashpw(data['password'].encode('utf-8'), bcrypt.gensalt())
+    hashed_password = bcrypt.hashpw(data['password'].encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
     email = data['email']
-    sid = "24DB" + bcrypt.generate_password_hash(email).decode('utf-8')[:16]
+    # sid = "24DB" + bcrypt.generate_password_hash(email).decode('utf-8')[:16]
+    sid = "24DB" + bcrypt.hashpw(email.encode('utf-8'), bcrypt.gensalt()).decode('utf-8')[:16]
+    print(f"Password: {data['password']}, Hashed Password: {hashed_password}")
     try:
         with psycopg2.connect(**config) as conn:
             with conn.cursor() as cur:
@@ -71,14 +73,17 @@ def signup_student():
                         return jsonify({'message': 'User successfully registered'}), 200
     except (Exception, psycopg2.DatabaseError) as error:
         print(error)
-        return jsonify({'message': 'User created successfully'}), 404
+        return jsonify({'message': 'Error Creating user'}), 404
     
 @app.route('/signup_organiser', methods=['POST'])
 def signup_organiser():
     data = request.get_json()
-    hashed_password = bcrypt.generate_password_hash(data['password']).decode('utf-8')
+    # hashed_password = bcrypt.generate_password_hash(data['password']).decode('utf-8')
+    hashed_password = bcrypt.hashpw(data['password'].encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
     email = data['email']
-    oid = "24OR" + bcrypt.generate_password_hash(email).decode('utf-8')[:16]
+    # oid = "24OR" + bcrypt.generate_password_hash(email).decode('utf-8')[:16]
+    oid = "24OR" + bcrypt.hashpw(email.encode('utf-8'), bcrypt.gensalt()).decode('utf-8')[:16]
+
     try:
         with psycopg2.connect(**config) as conn:
             with conn.cursor() as cur:
@@ -88,7 +93,7 @@ def signup_organiser():
                 if(rows):
                     return jsonify({'message': 'Organiser already exists'}), 404
                 else:
-                    cur.execute(f"SELECT * FROM STUDENTS WHERE email='{email}';")
+                    cur.execute(f"SELECT * FROM STUDENT WHERE email='{email}';")
                     rows = cur.fetchall()
                     if(rows):
                         return jsonify({'message': 'User already exists'}), 404
@@ -97,7 +102,7 @@ def signup_organiser():
                         return jsonify({'message': 'Organiser successfully registered'}), 200
     except (Exception, psycopg2.DatabaseError) as error:
         print(error)
-        return jsonify({'message': 'Organiser created successfully'}), 404
+        return jsonify({'message': 'Error Creating user'}), 404
 
 @app.route('/login', methods=['POST'])
 def login():
@@ -111,8 +116,8 @@ def login():
                 # Executing the selected query
                 cur.execute(f"SELECT * FROM STUDENT WHERE email='{email}';")
                 rows = cur.fetchall()
-                if(rows):
-                    hashed_password = rows[0][8]
+                if rows:
+                    hashed_password = rows[0][9]
                     if bcrypt.checkpw(password.encode('utf-8'), hashed_password.encode('utf-8')):
                         access_token = create_access_token(identity=email)
                         return jsonify({'access_token': access_token}), 200
@@ -121,8 +126,8 @@ def login():
                 else:
                     cur.execute(f"SELECT * FROM ORGANISERS WHERE email='{email}';")
                     rows = cur.fetchall()
-                    if(rows):   
-                        hashed_password = rows[0][8]
+                    if rows:
+                        hashed_password = rows[0][4]
                         if bcrypt.checkpw(password.encode('utf-8'), hashed_password.encode('utf-8')):
                             access_token = create_access_token(identity=email)
                             return jsonify({'access_token': access_token}), 200
@@ -133,6 +138,7 @@ def login():
     except (Exception, psycopg2.DatabaseError) as error:
         print(error)
         return jsonify({'message': 'User does not exist'}), 404
+
 
 @app.route('/protected', methods=['GET'])
 @jwt_required()
