@@ -33,3 +33,6 @@ config  = load_config()
 def hello():
     return 'Hello, World!'
 
+@app.route('/')
+def abc():
+    pass
