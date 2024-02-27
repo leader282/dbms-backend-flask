@@ -15,7 +15,7 @@ def get_all_events():
     try:
         with psycopg2.connect(**config) as conn:
             with conn.cursor() as cur:
-                cur.execute("SELECT id, name, type, start_date_time, end_date_time FROM EVENTS;")
+                cur.execute("SELECT id, name, type, start_date_time, end_date_time FROM EVENT;")
                 rows = cur.fetchall()
                 sid = profile_info.get('sid', 0)
                 oid = profile_info.get('oid', 0)
@@ -32,22 +32,22 @@ def get_all_events():
                         cur.execute(f"SELECT * FROM PARTICIPATION WHERE student_id='{sid}' AND event_id='{eid}';")
                         rows = cur.fetchall()
                         if len(rows):
-                            event['registered'] = False
-                        else:
                             event['registered'] = True
+                        else:
+                            event['registered'] = False
                         cur.execute(f"SELECT * FROM VOLUNTEERS WHERE student_id='{sid}' AND event_id='{eid}';")
                         rows = cur.fetchall()
                         if len(rows):
-                            event['volunteered'] = False
-                        else:
                             event['volunteered'] = True
+                        else:
+                            event['volunteered'] = False
                     elif oid:
                         cur.execute(f"SELECT * FROM MANAGES WHERE organiser_id='{oid}' AND event_id='{eid}';")
                         rows = cur.fetchall()
                         if len(rows):
-                            event['sponsored'] = False
-                        else:
                             event['sponsored'] = True
+                        else:
+                            event['sponsored'] = False
                     all_events_list.append(event)
                 return jsonify(all_events_list), 200
     except (Exception, psycopg2.DatabaseError) as error:
@@ -61,12 +61,13 @@ def get_an_event(event_id):
     try:
         with psycopg2.connect(**config) as conn:
             with conn.cursor() as cur:
-                cur.execute(f"SELECT * FROM EVENTS WHERE id='{event_id}';")
+                cur.execute(f"SELECT * FROM EVENT WHERE id='{event_id}';")
                 row = cur.fetchall()[0]
                 sid = profile_info.get('sid', 0)
                 oid = profile_info.get('oid', 0)
+                eid = row[0]
                 event = {
-                    'eid': row[0],
+                    'eid': eid,
                     'name': row[1],
                     'type': row[2],
                     'info': row[3],
@@ -79,19 +80,19 @@ def get_an_event(event_id):
                     'created_at': row[10]
                 }
                 if sid:
-                    cur.execute(f"SELECT * FROM PARTICIPATION WHERE student_id='{sid}';")
+                    cur.execute(f"SELECT * FROM PARTICIPATION WHERE student_id='{sid}' AND event_id='{eid}';")
                     rows = cur.fetchall()
                     if len(rows):
-                        event['registered'] = False
-                    else:
                         event['registered'] = True
+                    else:
+                        event['registered'] = False
                 elif oid:
-                    cur.execute(f"SELECT * FROM MANAGES WHERE organiser_id='{oid}';")
+                    cur.execute(f"SELECT * FROM MANAGES WHERE organiser_id='{oid}' AND event_id='{eid}';")
                     rows = cur.fetchall()
                     if len(rows):
-                        event['sponsored'] = False
-                    else:
                         event['sponsored'] = True
+                    else:
+                        event['sponsored'] = False
                 return jsonify({'event': event}), 200
     except (Exception, psycopg2.DatabaseError) as error:
         print(error)
@@ -107,8 +108,13 @@ def register(event_id):
         with psycopg2.connect(**config) as conn:
             with conn.cursor() as cur:
                 sid = profile_info.get('sid', 0)
-                cur.execute(f"INSERT INTO PARTICIPATION VALUES ('{event_id}', '{sid}');")
-                return jsonify({'message': 'Registered in event successfully'}), 200
+                cur.execute(f"SELECT * FROM PARTICIPATION WHERE student_id='{sid}' AND event_id='{event_id}'")
+                rows = cur.fetchall()
+                if len(rows) == 0:
+                    cur.execute(f"INSERT INTO PARTICIPATION VALUES ('{event_id}', '{sid}');")
+                    return jsonify({'message': 'Registered in event successfully'}), 200
+                else:
+                    return jsonify({'message': 'Already registered in this event'}), 404
     except (Exception, psycopg2.DatabaseError) as error:
         print(error)
         return jsonify({'message': 'Error fetching events'}), 404
