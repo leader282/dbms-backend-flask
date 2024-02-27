@@ -7,6 +7,7 @@ from flask_cors import CORS
 from dotenv import load_dotenv
 import os
 from flask import Blueprint
+from uuid import uuid4
 
 auth = Blueprint('auth', __name__)
 app = Flask(__name__)
@@ -126,8 +127,25 @@ def login():
                             return jsonify({'access_token': access_token}), 200
                         else:
                             return jsonify({'message': 'Invalid credentials'}), 404
+                    
                     else:
-                        return jsonify({'message': 'User does not exist'}), 404
+                        cur.execute(f"SELECT * FROM ADMIN WHERE email='{email}';")
+                        rows = cur.fetchall()
+                        if rows:
+                            hashed_password = rows[0][3]
+                            if bcrypt.checkpw(password.encode('utf-8'), hashed_password.encode('utf-8')):
+                                profile_info = {
+                                    'id': rows[0][0],
+                                    'email': rows[0][1],
+                                    'name': rows[0][2],
+                                    'role': 'admin'
+                                }
+                                access_token = create_access_token(identity=email,additional_headers=profile_info, expires_delta=False)
+                                return jsonify({'access_token': access_token}), 200
+                            else:
+                                return jsonify({'message': 'Invalid credentials'}), 404
+                        else:
+                            return jsonify({'message': 'User does not exist'}), 404
     except (Exception, psycopg2.DatabaseError) as error:
         print(error)
         return jsonify({'message': 'User does not exist'}), 404
@@ -138,6 +156,33 @@ def profile():
     profile_info = get_jwt_header()
     print(profile_info)
     return profile_info
+
+
+@auth.route('/create_admin', methods=['POST'])
+def create_admin():
+    # password is 'admin'
+    data = request.get_json()
+    admin_id = str(uuid4())
+    admin_email = data['email']
+    admin_password = "admin"
+    admin_name = data['name']
+    data = request.get_json()
+    hashed_password = bcrypt.hashpw(admin_password.encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
+    try:
+        with psycopg2.connect(**config) as conn:
+            with conn.cursor() as cur:
+                # Executing the selected query
+                cur.execute(f"SELECT * FROM ADMIN WHERE email='{admin_email}';")
+                rows = cur.fetchall()
+                if(rows):
+                    return jsonify({'message': 'Admin already exists'}), 404
+                else:
+                    cur.execute(f"INSERT INTO ADMIN VALUES ('{admin_id}', '{admin_name}', '{admin_email}', '{hashed_password}');")
+                    return jsonify({'message': 'Admin successfully registered'}), 200
+    except (Exception, psycopg2.DatabaseError) as error:
+        print(error)
+        return jsonify({'message': 'Error Creating admin'}), 404
+
 
 
 # # Route for token refresh
