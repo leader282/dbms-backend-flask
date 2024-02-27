@@ -1,6 +1,6 @@
 from flask import Flask, request, jsonify
-from flask_bcrypt import Bcrypt
-from flask_jwt_extended import JWTManager, create_access_token, jwt_required
+import bcrypt
+from flask_jwt_extended import JWTManager, create_access_token, jwt_required, get_jwt_identity
 import psycopg2
 from config import load_config
 from flask_cors import CORS
@@ -12,8 +12,9 @@ CORS(app)
 load_dotenv()
 
 app.config['JWT_SECRET_KEY'] = os.environ.get('JWT_SECRET_KEY')                     # Change this to a random secret in production
-bcrypt = Bcrypt(app)
 jwt = JWTManager(app)
+salt = os.environ.get('SALT')
+cost_factor = os.environ.get('COST_FACTOR')
 
 # Mock user database
 users = []
@@ -31,18 +32,6 @@ def connect(config):
 
 config  = load_config()
 
-#     try:
-#         with psycopg2.connect(**config) as conn:
-#             with conn.cursor() as cur:
-#                 # Executing the selected query
-#                 cur.execute(query_list[query_number-1])
-#                 rows = cur.fetchall()
-#                 # Printing the results using query_output function
-#                 query_output(rows, query_number)
-
-#     except (Exception, psycopg2.DatabaseError) as error:
-#         print(error)
-
 @app.route('/')
 def hello():
     return 'Hello, World!'
@@ -50,7 +39,7 @@ def hello():
 @app.route('/signup_student', methods=['POST'])
 def signup_student():
     data = request.get_json()
-    hashed_password = bcrypt.hashpw(data['password'].encode('utf-8'), bcrypt.gensalt())
+    hashed_password = bcrypt.hashpw(data['password'].encode('utf-8'), salt, cost_factor)
     email = data['email']
     sid = "24DB" + bcrypt.generate_password_hash(email).decode('utf-8')[:16]
     try:
@@ -76,7 +65,7 @@ def signup_student():
 @app.route('/signup_organiser', methods=['POST'])
 def signup_organiser():
     data = request.get_json()
-    hashed_password = bcrypt.generate_password_hash(data['password']).decode('utf-8')
+    hashed_password = bcrypt.hashpw(data['password'].encode('utf-8'), bytes(salt, 'utf-8'))
     email = data['email']
     oid = "24OR" + bcrypt.generate_password_hash(email).decode('utf-8')[:16]
     try:
@@ -88,7 +77,7 @@ def signup_organiser():
                 if(rows):
                     return jsonify({'message': 'Organiser already exists'}), 404
                 else:
-                    cur.execute(f"SELECT * FROM STUDENTS WHERE email='{email}';")
+                    cur.execute(f"SELECT * FROM STUDENT WHERE email='{email}';")
                     rows = cur.fetchall()
                     if(rows):
                         return jsonify({'message': 'User already exists'}), 404
@@ -111,9 +100,20 @@ def login():
                 # Executing the selected query
                 cur.execute(f"SELECT * FROM STUDENT WHERE email='{email}';")
                 rows = cur.fetchall()
-                if(rows):
-                    hashed_password = rows[0][8]
+                if(len(rows) == 1):
+                    hashed_password = rows[0][9]
                     if bcrypt.checkpw(password.encode('utf-8'), hashed_password.encode('utf-8')):
+                        profile_info = {
+                            'sid': rows[0][0],
+                            'email': rows[0][1],
+                            'name': rows[0][2],
+                            'roll_number': rows[0][3],
+                            'phone': rows[0][4],
+                            'college': rows[0][5],
+                            'department': rows[0][6],
+                            'year': rows[0][7],
+                            'type': rows[0][8]
+                        }
                         access_token = create_access_token(identity=email)
                         return jsonify({'access_token': access_token}), 200
                     else:
@@ -122,7 +122,7 @@ def login():
                     cur.execute(f"SELECT * FROM ORGANISERS WHERE email='{email}';")
                     rows = cur.fetchall()
                     if(rows):   
-                        hashed_password = rows[0][8]
+                        hashed_password = rows[0][4]
                         if bcrypt.checkpw(password.encode('utf-8'), hashed_password.encode('utf-8')):
                             access_token = create_access_token(identity=email)
                             return jsonify({'access_token': access_token}), 200
@@ -134,10 +134,11 @@ def login():
         print(error)
         return jsonify({'message': 'User does not exist'}), 404
 
-@app.route('/protected', methods=['GET'])
+@app.route('/profile', methods=['GET'])
 @jwt_required()
-def protected():
-    return jsonify({'message': 'Protected content!'}), 200
+def profile():
+    email = get_jwt_identity()
+
 
 if __name__ == '__main__':
     app.run(debug=True)
