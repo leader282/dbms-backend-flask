@@ -13,8 +13,6 @@ load_dotenv()
 
 app.config['JWT_SECRET_KEY'] = os.environ.get('JWT_SECRET_KEY')                     # Change this to a random secret in production
 jwt = JWTManager(app)
-salt = os.environ.get('SALT')
-cost_factor = os.environ.get('COST_FACTOR')
 
 # Mock user database
 users = []
@@ -39,10 +37,8 @@ def hello():
 @app.route('/signup_student', methods=['POST'])
 def signup_student():
     data = request.get_json()
-    # hashed_password = bcrypt.hashpw(data['password'].encode('utf-8'), bcrypt.gensalt())
     hashed_password = bcrypt.hashpw(data['password'].encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
     email = data['email']
-    # sid = "24DB" + bcrypt.generate_password_hash(email).decode('utf-8')[:16]
     sid = "24DB" + bcrypt.hashpw(email.encode('utf-8'), bcrypt.gensalt()).decode('utf-8')[:16]
     print(f"Password: {data['password']}, Hashed Password: {hashed_password}")
     try:
