@@ -30,18 +30,6 @@ def connect(config):
 
 config  = load_config()
 
-#     try:
-#         with psycopg2.connect(**config) as conn:
-#             with conn.cursor() as cur:
-#                 # Executing the selected query
-#                 cur.execute(query_list[query_number-1])
-#                 rows = cur.fetchall()
-#                 # Printing the results using query_output function
-#                 query_output(rows, query_number)
-
-#     except (Exception, psycopg2.DatabaseError) as error:
-#         print(error)
-
 @app.route('/')
 def hello():
     return 'Hello, World!'
@@ -78,10 +66,8 @@ def signup_student():
 @app.route('/signup_organiser', methods=['POST'])
 def signup_organiser():
     data = request.get_json()
-    # hashed_password = bcrypt.generate_password_hash(data['password']).decode('utf-8')
     hashed_password = bcrypt.hashpw(data['password'].encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
     email = data['email']
-    # oid = "24OR" + bcrypt.generate_password_hash(email).decode('utf-8')[:16]
     oid = "24OR" + bcrypt.hashpw(email.encode('utf-8'), bcrypt.gensalt()).decode('utf-8')[:16]
 
     try:
@@ -109,7 +95,7 @@ def login():
     data = request.get_json()
     email = data['email']
     password = data['password']
-    print(email, password)
+    # print(email, password)
     try:
         with psycopg2.connect(**config) as conn:
             with conn.cursor() as cur:
