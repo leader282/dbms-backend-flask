@@ -7,15 +7,17 @@ from flask_cors import CORS
 from dotenv import load_dotenv
 import os
 from routers.auth import auth
+from routers.events import events
 
 app = Flask(__name__)
 CORS(app)
 load_dotenv()
 
-app.config['JWT_SECRET_KEY'] = os.environ.get('JWT_SECRET_KEY')                     # Change this to a random secret in production
+app.config['JWT_SECRET_KEY'] = os.environ.get('JWT_SECRET_KEY')
 jwt = JWTManager(app)
 
 app.register_blueprint(auth)
+app.register_blueprint(events, url_prefix='/event')
 
 
 @app.route('/')
