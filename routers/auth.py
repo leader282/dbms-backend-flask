@@ -106,7 +106,7 @@ def login():
                             'year': rows[0][7],
                             'type': rows[0][8]
                         }
-                        access_token = create_access_token(identity=email, additional_headers=profile_info)
+                        access_token = create_access_token(identity=email, additional_headers=profile_info, expires_delta=False)
                         return jsonify({'access_token': access_token}), 200
                     else:
                         return jsonify({'message': 'Invalid credentials'}), 404
@@ -122,7 +122,7 @@ def login():
                                 'name': rows[0][2],
                                 'phone': rows[0][3]
                             }
-                            access_token = create_access_token(identity=email, additional_headers=profile_info)
+                            access_token = create_access_token(identity=email, additional_headers=profile_info, expires_delta=False)
                             return jsonify({'access_token': access_token}), 200
                         else:
                             return jsonify({'message': 'Invalid credentials'}), 404
@@ -138,4 +138,13 @@ def profile():
     profile_info = get_jwt_header()
     print(profile_info)
     return profile_info
+
+
+# # Route for token refresh
+# @auth.route('/refresh_token', methods=['GET'])
+# @jwt_required(refresh=True)
+# def refresh_token():
+#     current_user = get_jwt_identity()
+#     new_token = create_access_token(identity=current_user)
+#     return jsonify({'access_token': new_token}), 200
 
