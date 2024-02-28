@@ -10,6 +10,7 @@ from routers.auth import auth
 from routers.accomodation import accomodation
 from routers.events import events
 from routers.admin.event import admin_event
+from routers.admin.manage_users import admin_manage_user
 
 app = Flask(__name__)
 CORS(app)
@@ -22,14 +23,12 @@ app.register_blueprint(accomodation)
 app.register_blueprint(auth)
 app.register_blueprint(events, url_prefix='/event')
 app.register_blueprint(admin_event, url_prefix='/admin')
+app.register_blueprint(admin_manage_user, url_prefix='/admin')
 
 
 @app.route('/')
 def hello():
     return 'Hello, World!'
-
-
-
 
 
 if __name__ == '__main__':

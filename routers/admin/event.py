@@ -11,17 +11,17 @@ admin_event = Blueprint('admin_event', __name__)
 
 config  = load_config()
 
-@admin_event.route('/all_events', methods=['GET'])
+@admin_event.route('/events', methods=['GET'])
 @jwt_required()
 def all_events():
     user_details = get_jwt_header()
-    if(user_details['type'] != 'admin'):
+    if(user_details['role'] != 'admin'):
         return jsonify({'message': 'Unauthorized'}), 401
     try:
         with psycopg2.connect(**config) as conn:
             with conn.cursor() as cur:
                 # Executing the selected query
-                cur.execute(f"SELECT * FROM EVENTS;")
+                cur.execute(f"SELECT * FROM EVENT;")
                 rows = cur.fetchall()
                 if not rows:
                     return jsonify({'details': ''}), 200
@@ -35,7 +35,7 @@ def all_events():
 @jwt_required()
 def add_event():
     user_details = get_jwt_header()
-    if(user_details['type'] != 'admin'):
+    if(user_details['role'] != 'admin'):
         return jsonify({'message': 'Unauthorized'}), 401
     data = request.get_json()
     try:
@@ -60,7 +60,7 @@ def delete_event():
         with psycopg2.connect(**config) as conn:
             with conn.cursor() as cur:
                 # Executing the selected query
-                cur.execute(f"DELETE FROM EVENTS WHERE id='{data['id']};")
+                cur.execute(f"DELETE FROM EVENT WHERE id='{data['id']};")
                 return jsonify({'message': 'Event successfully deleted'}), 200
     except (Exception, psycopg2.DatabaseError) as error:
         print(error)
@@ -70,7 +70,7 @@ def delete_event():
 @jwt_required()
 def update_event():
     user_details = get_jwt_header()
-    if(user_details['type'] != 'admin'):
+    if(user_details['role'] != 'admin'):
         return jsonify({'message': 'Unauthorized'}), 401
     data = request.get_json()
     try:
@@ -78,7 +78,7 @@ def update_event():
             with conn.cursor() as cur:
                 # Executing the selected query
                 if data['type'] == 'competition':
-                    cur.execute(f"UPDATE EVENTS SET name='{data['name']}', type='{data['type']}', info='{data['info']}', start_date_time={data['start_date_time']}, end_date_time={data['end_date_time']}, location='{data['location']}', first_prize='{data['first_prize']}', second_prize='{data['second_prize']}', third_prize='{data['third_prize']}' WHERE id='{data['id']}';")
+                    cur.execute(f"UPDATE EVENT SET name='{data['name']}', type='{data['type']}', info='{data['info']}', start_date_time={data['start_date_time']}, end_date_time={data['end_date_time']}, location='{data['location']}', first_prize='{data['first_prize']}', second_prize='{data['second_prize']}', third_prize='{data['third_prize']}' WHERE id='{data['id']}';")
                 else:
                     cur.execute(f"UPDATE EVENTS SET name='{data['name']}', type='{data['type']}', info='{data['info']}', start_date_time={data['start_date_time']}, end_date_time={data['end_date_time']}, location='{data['location']}', first_prize=NULL, second_prize=NULL, third_prize=NULL WHERE id='{data['id']}';")
                 return jsonify({'message': 'Event successfully updated'}), 200
