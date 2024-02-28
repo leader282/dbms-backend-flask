@@ -31,7 +31,7 @@ def all_students():
         print(error)
         return jsonify({'message': 'Error Fetching events'}), 404
 
-@admin_manage_user.route('/remove_student', methods=['POST'])
+@admin_manage_user.route('/remove_student', methods=['DELETE'])
 @jwt_required()
 def remove_user():
     user_details = get_jwt_header()
@@ -68,7 +68,7 @@ def all_organisers():
         print(error)
         return jsonify({'message': 'Error Fetching events'}), 404
 
-@admin_manage_user.route('/remove_organiser', methods=['POST'])
+@admin_manage_user.route('/remove_organiser', methods=['DELETE'])
 @jwt_required()
 def remove_organiser():
     user_details = get_jwt_header()

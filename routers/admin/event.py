@@ -11,25 +11,25 @@ admin_event = Blueprint('admin_event', __name__)
 
 config  = load_config()
 
-@admin_event.route('/events', methods=['GET'])
-@jwt_required()
-def all_events():
-    user_details = get_jwt_header()
-    if(user_details['role'] != 'admin'):
-        return jsonify({'message': 'Unauthorized'}), 401
-    try:
-        with psycopg2.connect(**config) as conn:
-            with conn.cursor() as cur:
-                # Executing the selected query
-                cur.execute(f"SELECT * FROM EVENT;")
-                rows = cur.fetchall()
-                if not rows:
-                    return jsonify({'details': ''}), 200
-                else:
-                    return jsonify({'data': rows}), 200
-    except (Exception, psycopg2.DatabaseError) as error:
-        print(error)
-        return jsonify({'message': 'Error Fetching events'}), 404
+# @admin_event.route('/events', methods=['GET'])
+# @jwt_required()
+# def all_events():
+#     user_details = get_jwt_header()
+#     if(user_details['role'] != 'admin'):
+#         return jsonify({'message': 'Unauthorized'}), 401
+#     try:
+#         with psycopg2.connect(**config) as conn:
+#             with conn.cursor() as cur:
+#                 # Executing the selected query
+#                 cur.execute(f"SELECT * FROM EVENT;")
+#                 rows = cur.fetchall()
+#                 if not rows:
+#                     return jsonify({'details': ''}), 200
+#                 else:
+#                     return jsonify({'data': rows}), 200
+#     except (Exception, psycopg2.DatabaseError) as error:
+#         print(error)
+#         return jsonify({'message': 'Error Fetching events'}), 404
 
 @admin_event.route('/add_event', methods=['POST'])
 @jwt_required()
@@ -57,7 +57,7 @@ def add_event():
         print(error)
         return jsonify({'message': 'Error Adding event'}), 404
 
-@admin_event.route('/delete_event', methods=['POST'])
+@admin_event.route('/delete_event', methods=['DELETE'])
 @jwt_required()
 def delete_event():
     user_details = get_jwt_header()
@@ -78,7 +78,7 @@ def delete_event():
         print(error)
         return jsonify({'message': 'Error Deleting event'}), 404
     
-@admin_event.route('/update_event', methods=['POST'])
+@admin_event.route('/update_event', methods=['PUT'])
 @jwt_required()
 def update_event():
     user_details = get_jwt_header()
