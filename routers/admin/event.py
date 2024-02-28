@@ -42,12 +42,17 @@ def add_event():
         with psycopg2.connect(**config) as conn:
             with conn.cursor() as cur:
                 # Executing the selected query
-                event_id = str(uuid4())
-                if data['type'] == 'competition':
-                    cur.execute(f"INSERT INTO EVENTS VALUES ('{event_id}', '{data['name']}', '{data['type']}', '{data['info']}', {data['start_date_time']}', {data['end_date_time']}', '{data['location']}', '{data['first_prize']}' , '{data['second_prize']}', '{data['third_prize']}');")
+                cur.execute(f"SELECT * FROM EVENT WHERE name='{data['name']}';")
+                rows = cur.fetchall()
+                if rows:
+                    return jsonify({'message': 'Event already exists'}), 404
                 else:
-                    cur.execute(f"INSERT INTO EVENTS VALUES ('{event_id}', '{data['name']}', '{data['type']}', '{data['info']}', {data['start_date_time']}', {data['end_date_time']}', '{data['location']}', NULL, NULL, NULL);")
-                return jsonify({'message': 'Event successfully added'}), 200
+                    event_id = str(uuid4())
+                    if data['type'] == 'competition':
+                        cur.execute(f"INSERT INTO EVENT VALUES ('{event_id}', '{data['name']}', '{data['type']}', '{data['info']}', '{data['start_date_time']}', '{data['end_date_time']}', '{data['location']}', '{data['first_prize']}' , '{data['second_prize']}', '{data['third_prize']}');")
+                    else:
+                        cur.execute(f"INSERT INTO EVENT VALUES ('{event_id}', '{data['name']}', '{data['type']}', '{data['info']}', '{data['start_date_time']}', '{data['end_date_time']}', '{data['location']}', NULL, NULL, NULL);")
+                    return jsonify({'event_id': event_id}), 200
     except (Exception, psycopg2.DatabaseError) as error:
         print(error)
         return jsonify({'message': 'Error Adding event'}), 404
@@ -55,12 +60,19 @@ def add_event():
 @admin_event.route('/delete_event', methods=['POST'])
 @jwt_required()
 def delete_event():
-    data = request.get_json()
+    user_details = get_jwt_header()
+    if(user_details['role'] != 'admin'):
+        return jsonify({'message': 'Unauthorized'}), 401
+    try:
+        data = request.get_json()
+    except Exception as e:
+        print(e)
+        return jsonify({'message': 'Invalid request'}), 404
     try:
         with psycopg2.connect(**config) as conn:
             with conn.cursor() as cur:
                 # Executing the selected query
-                cur.execute(f"DELETE FROM EVENT WHERE id='{data['id']};")
+                cur.execute(f"DELETE FROM EVENT WHERE id='{data['id']}';")
                 return jsonify({'message': 'Event successfully deleted'}), 200
     except (Exception, psycopg2.DatabaseError) as error:
         print(error)
@@ -70,17 +82,26 @@ def delete_event():
 @jwt_required()
 def update_event():
     user_details = get_jwt_header()
-    if(user_details['role'] != 'admin'):
+    if user_details['role'] != 'admin':
         return jsonify({'message': 'Unauthorized'}), 401
     data = request.get_json()
+    
+    allowed_fields = ['name', 'type', 'info', 'start_date_time', 'end_date_time', 'location', 'first_prize', 'second_prize', 'third_prize']
+    
+    update_fields = {key: data[key] for key in allowed_fields if key in data}
+
     try:
         with psycopg2.connect(**config) as conn:
             with conn.cursor() as cur:
-                # Executing the selected query
+                # Constructing the SQL query dynamically based on the available fields
                 if data['type'] == 'competition':
-                    cur.execute(f"UPDATE EVENT SET name='{data['name']}', type='{data['type']}', info='{data['info']}', start_date_time={data['start_date_time']}, end_date_time={data['end_date_time']}, location='{data['location']}', first_prize='{data['first_prize']}', second_prize='{data['second_prize']}', third_prize='{data['third_prize']}' WHERE id='{data['id']}';")
+                    cur.execute("""
+                        UPDATE EVENT 
+                        SET """ + ', '.join(f"{key}='{value}'" for key, value in update_fields.items()) + f" WHERE id='{data['id']}';")
                 else:
-                    cur.execute(f"UPDATE EVENTS SET name='{data['name']}', type='{data['type']}', info='{data['info']}', start_date_time={data['start_date_time']}, end_date_time={data['end_date_time']}, location='{data['location']}', first_prize=NULL, second_prize=NULL, third_prize=NULL WHERE id='{data['id']}';")
+                    cur.execute("""
+                        UPDATE EVENT
+                        SET """ + ', '.join(f"{key}='{value}'" for key, value in update_fields.items()) + f" WHERE id='{data['id']}';")
                 return jsonify({'message': 'Event successfully updated'}), 200
     except (Exception, psycopg2.DatabaseError) as error:
         print(error)
