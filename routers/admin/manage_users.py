@@ -31,18 +31,18 @@ def all_students():
         print(error)
         return jsonify({'message': 'Error Fetching events'}), 404
 
-@admin_manage_user.route('/remove_student', methods=['DELETE'])
+@admin_manage_user.route('/remove_student/<int:id>', methods=['DELETE'])
 @jwt_required()
-def remove_user():
+def remove_user(id):
     user_details = get_jwt_header()
     if(user_details['role'] != 'admin'):
         return jsonify({'message': 'Unauthorized'}), 401
-    data = request.get_json()
+    # data = request.get_json()
     try:
         with psycopg2.connect(**config) as conn:
             with conn.cursor() as cur:
                 # Executing the selected query
-                cur.execute(f"DELETE FROM STUDENT WHERE id='{data['id']}';")
+                cur.execute(f"DELETE FROM STUDENT WHERE id='{id}';")
                 return jsonify({'message': 'User successfully deleted'}), 200
     except (Exception, psycopg2.DatabaseError) as error:
         print(error)
@@ -68,9 +68,9 @@ def all_organisers():
         print(error)
         return jsonify({'message': 'Error Fetching events'}), 404
 
-@admin_manage_user.route('/remove_organiser', methods=['DELETE'])
+@admin_manage_user.route('/remove_organiser/<int:id>', methods=['DELETE'])
 @jwt_required()
-def remove_organiser():
+def remove_organiser(id):
     user_details = get_jwt_header()
     if(user_details['role'] != 'admin'):
         return jsonify({'message': 'Unauthorized'}), 401
@@ -79,7 +79,7 @@ def remove_organiser():
         with psycopg2.connect(**config) as conn:
             with conn.cursor() as cur:
                 # Executing the selected query
-                cur.execute(f"DELETE FROM ORGANISER WHERE id='{data['id']}';")
+                cur.execute(f"DELETE FROM ORGANISER WHERE id='{id}';")
                 return jsonify({'message': 'User successfully deleted'}), 200
     except (Exception, psycopg2.DatabaseError) as error:
         print(error)

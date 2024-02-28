@@ -57,22 +57,17 @@ def add_event():
         print(error)
         return jsonify({'message': 'Error Adding event'}), 404
 
-@admin_event.route('/delete_event', methods=['DELETE'])
+@admin_event.route('/delete_event/<int:id>', methods=['DELETE'])
 @jwt_required()
-def delete_event():
+def delete_event(id):
     user_details = get_jwt_header()
     if(user_details['role'] != 'admin'):
         return jsonify({'message': 'Unauthorized'}), 401
     try:
-        data = request.get_json()
-    except Exception as e:
-        print(e)
-        return jsonify({'message': 'Invalid request'}), 404
-    try:
         with psycopg2.connect(**config) as conn:
             with conn.cursor() as cur:
                 # Executing the selected query
-                cur.execute(f"DELETE FROM EVENT WHERE id='{data['id']}';")
+                cur.execute(f"DELETE FROM EVENT WHERE id='{id}';")
                 return jsonify({'message': 'Event successfully deleted'}), 200
     except (Exception, psycopg2.DatabaseError) as error:
         print(error)
