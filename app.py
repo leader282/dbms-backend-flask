@@ -8,7 +8,8 @@ from dotenv import load_dotenv
 import os
 from routers.auth import auth
 from routers.accomodation import accomodation
-from routers.events import events
+from routers.events.event import events
+from routers.events.register import events_register
 from routers.admin.event import admin_event
 from routers.admin.manage_users import admin_manage_user
 
@@ -22,6 +23,7 @@ jwt = JWTManager(app)
 app.register_blueprint(accomodation)
 app.register_blueprint(auth)
 app.register_blueprint(events, url_prefix='/event')
+app.register_blueprint(events_register, url_prefix='/event')
 app.register_blueprint(admin_event, url_prefix='/admin')
 app.register_blueprint(admin_manage_user, url_prefix='/admin')
 
