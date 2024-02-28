@@ -79,6 +79,7 @@ def signup_organiser():
 def login():
     data = request.get_json()
     email = data['email']
+    print(email)
     password = data['password']
     # print(email, password)
     try:
@@ -87,6 +88,7 @@ def login():
                 # Executing the selected query
                 cur.execute(f"SELECT * FROM STUDENT WHERE email='{email}';")
                 rows = cur.fetchall()
+                # print(rows)
                 if rows:
                     hashed_password = rows[0][9]
                     if bcrypt.checkpw(password.encode('utf-8'), hashed_password.encode('utf-8')):
@@ -148,7 +150,7 @@ def login():
 @jwt_required()
 def profile():
     profile_info = get_jwt_header()
-    print(profile_info)
+    # print(profile_info)
     return profile_info
 
 

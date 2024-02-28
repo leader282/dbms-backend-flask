@@ -11,12 +11,16 @@ config  = load_config()
 @jwt_required()
 def register_student(event_id):
     profile_info = get_jwt_header()
-    if profile_info.get('sid', 0) == 0 or profile_info['type'] == "internal":
+    if profile_info.get('sid', 0) == 0:
         return jsonify({'message': 'User doesnot have access here'}), 404
     try:
         with psycopg2.connect(**config) as conn:
             with conn.cursor() as cur:
                 sid = profile_info.get('sid', 0)
+                cur.execute(f"SELECT * FROM VOLUNTEERS WHERE student_id='{sid}' AND event_id='{event_id}'")
+                rows = cur.fetchall()
+                if len(rows):
+                    return jsonify({'message': 'Student is already a voluneer in this event'}), 404
                 cur.execute(f"SELECT * FROM PARTICIPATION WHERE student_id='{sid}' AND event_id='{event_id}'")
                 rows = cur.fetchall()
                 if len(rows) == 0:
@@ -40,6 +44,10 @@ def volunteer_student(event_id):
         with psycopg2.connect(**config) as conn:
             with conn.cursor() as cur:
                 sid = profile_info.get('sid', 0)
+                cur.execute(f"SELECT * FROM PARTICIPATION WHERE student_id='{sid}' AND event_id='{event_id}'")
+                rows = cur.fetchall()
+                if len(rows):
+                    return jsonify({'message': 'Already registered in this event'}), 404
                 cur.execute(f"SELECT * FROM VOLUNTEERS WHERE student_id='{sid}' AND event_id='{event_id}'")
                 rows = cur.fetchall()
                 if len(rows) == 0:
@@ -55,8 +63,12 @@ def volunteer_student(event_id):
 @jwt_required()
 def sponsor(event_id):
     profile_info = get_jwt_header()
-    sponsorship_amount = request.get_json()['sponsorship_amount']
-    payment_status = request.get_json()['payment_status']
+    try:
+        sponsorship_amount = request.get_json()['sponsorship_amount']
+        payment_status = request.get_json()['payment_status']
+    except Exception as error:
+        print(error)
+        return jsonify({'message': 'Payload missing'}), 415
     if profile_info.get('oid', 0) == 0:
         return jsonify({'message': 'User doesnot have access here'}), 404
     try:

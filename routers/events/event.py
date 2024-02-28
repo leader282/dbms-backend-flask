@@ -1,4 +1,4 @@
-from flask import request, jsonify
+from flask import request, jsonify, redirect
 from flask_jwt_extended import jwt_required, get_jwt_header
 import psycopg2
 from config import load_config
@@ -7,7 +7,7 @@ from flask import Blueprint
 events = Blueprint('events', __name__)
 config  = load_config()
 
-@events.route('/', methods=['GET'])
+@events.route('', methods=['GET'])
 @jwt_required()
 def get_all_events():
     profile_info = get_jwt_header()
@@ -58,13 +58,17 @@ def get_all_events():
 @jwt_required()
 def get_an_event(event_id):
     profile_info = get_jwt_header()
+    if profile_info.get('oid', 0):
+        return redirect(f'/organiser/event/{event_id}')
     try:
         with psycopg2.connect(**config) as conn:
             with conn.cursor() as cur:
                 cur.execute(f"SELECT * FROM EVENT WHERE id='{event_id}';")
-                row = cur.fetchall()[0]
+                row = cur.fetchall()
+                if len(row) == 0:
+                    return jsonify({'message': 'No such event exists'}), 404
+                row = row[0]
                 sid = profile_info.get('sid', 0)
-                oid = profile_info.get('oid', 0)
                 eid = row[0]
                 event = {
                     'eid': eid,
@@ -86,14 +90,14 @@ def get_an_event(event_id):
                         event['registered'] = True
                     else:
                         event['registered'] = False
-                elif oid:
-                    cur.execute(f"SELECT * FROM MANAGES WHERE organiser_id='{oid}' AND event_id='{eid}';")
-                    rows = cur.fetchall()
-                    if len(rows):
-                        event['sponsored'] = True
-                    else:
-                        event['sponsored'] = False
-                return jsonify({'event': event}), 200
+                    if profile_info['type'] == 'internal':
+                        cur.execute(f"SELECT * FROM VOLUNTEERS WHERE student_id='{sid}' AND event_id='{eid}';")
+                        rows = cur.fetchall()
+                        if len(rows):
+                            event['volunteered'] = True
+                        else:
+                            event['volunteered'] = False
+                return jsonify(event), 200
     except (Exception, psycopg2.DatabaseError) as error:
         print(error)
         return jsonify({'message': 'Error fetching events'}), 404
