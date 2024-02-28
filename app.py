@@ -12,6 +12,7 @@ from routers.events.event import events
 from routers.events.register import events_register
 from routers.admin.event import admin_event
 from routers.admin.manage_users import admin_manage_user
+from routers.organiser.winner import winner_settings
 
 app = Flask(__name__)
 CORS(app)
@@ -26,6 +27,7 @@ app.register_blueprint(events, url_prefix='/event')
 app.register_blueprint(events_register, url_prefix='/event')
 app.register_blueprint(admin_event, url_prefix='/admin')
 app.register_blueprint(admin_manage_user, url_prefix='/admin')
+app.register_blueprint(winner_settings, url_prefix='/organiser')
 
 
 @app.route('/')
