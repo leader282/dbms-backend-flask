@@ -65,7 +65,6 @@ def sponsor(event_id):
     profile_info = get_jwt_header()
     try:
         sponsorship_amount = request.get_json()['sponsorship_amount']
-        payment_status = request.get_json()['payment_status']
     except Exception as error:
         print(error)
         return jsonify({'message': 'Payload missing'}), 415
@@ -78,7 +77,7 @@ def sponsor(event_id):
                 cur.execute(f"SELECT * FROM MANAGES WHERE organiser_id='{oid}' AND event_id='{event_id}'")
                 rows = cur.fetchall()
                 if len(rows) == 0:
-                    cur.execute(f"INSERT INTO MANAGES VALUES ('{event_id}', '{oid}', '{sponsorship_amount}', '{payment_status}');")
+                    cur.execute(f"INSERT INTO MANAGES VALUES ('{event_id}', '{oid}', '{sponsorship_amount}');")
                     return jsonify({'message': 'Event has been sponsored successfully'}), 200
                 else:
                     return jsonify({'message': 'Already sponsored this event'}), 404

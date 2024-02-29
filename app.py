@@ -14,6 +14,21 @@ from routers.admin.event import admin_event
 from routers.admin.manage_users import admin_manage_user
 from routers.organiser.winner import winner_settings
 from routers.organiser.event import organiser_event
+import os
+
+# Check if running in Vercel environment
+if 'VERCEL' in os.environ:
+    # Set the path to the virtual environment
+    venv_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), '.venv')
+
+    # Check if the virtual environment directory exists
+    if not os.path.exists(venv_dir):
+        # If it doesn't exist, create a virtual environment
+        os.system(f'python -m venv {venv_dir}')
+
+    # Activate the virtual environment
+    activate_this = os.path.join(venv_dir, 'bin/activate_this.py')
+    exec(open(activate_this).read(), {'__file__': activate_this})
 
 app = Flask(__name__)
 CORS(app)
