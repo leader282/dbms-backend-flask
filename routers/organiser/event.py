@@ -36,12 +36,14 @@ def get_an_event(event_id):
                     'third_prize': row[9],
                     'created_at': row[10]
                 }
-                cur.execute(f"SELECT * FROM MANAGES WHERE organiser_id='{oid}' AND event_id='{eid}';")
+                cur.execute(f"SELECT request_status FROM MANAGES WHERE organiser_id='{oid}' AND event_id='{eid}';")
                 rows = cur.fetchall()
-                if len(rows):
-                    event['sponsored'] = True
+                if len(rows) == 0:
+                    event['sponsored'] = "no"
                 else:
-                    event['sponsored'] = False
+                    event['sponsored'] = rows[0][0]
+                if event['sponsored'] != "approved":
+                    return jsonify(event), 200
                 cur.execute(f"SELECT DISTINCT student_id FROM PARTICIPATION WHERE event_id='{eid}';")
                 rows = cur.fetchall()
                 event['participants'] = []

@@ -42,12 +42,12 @@ def get_all_events():
                         else:
                             event['volunteered'] = False
                     elif oid:
-                        cur.execute(f"SELECT * FROM MANAGES WHERE organiser_id='{oid}' AND event_id='{eid}';")
+                        cur.execute(f"SELECT request_status FROM MANAGES WHERE organiser_id='{oid}' AND event_id='{eid}';")
                         rows = cur.fetchall()
-                        if len(rows):
-                            event['sponsored'] = True
+                        if len(rows) == 0:
+                            event['sponsored'] = "no"
                         else:
-                            event['sponsored'] = False
+                            event['sponsored'] = rows[0][0]
                     all_events_list.append(event)
                 return jsonify(all_events_list), 200
     except (Exception, psycopg2.DatabaseError) as error:
