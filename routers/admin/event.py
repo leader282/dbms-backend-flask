@@ -23,25 +23,26 @@ def all_events():
                 # Executing the selected query
                 cur.execute(f"SELECT * FROM EVENT;")
                 rows = cur.fetchall()
-                if not rows:
-                    return jsonify({'details': ''}), 200
-                else:
-                    all_events_list = []
-                    for row in rows:
-                        eid = row[0]
-                        event = {
-                            'eid': eid,
-                            'name': row[1],
-                            'type': row[2],
-                            'info': row[3],
-                            'start_date_time': row[4],
-                            'end_date_time': row[5],
-                            'location': row[6],
-                            'first_prize': row[7],
-                            'second_prize': row[8],
-                            'third_prize': row[9]
-                        }
+                all_events_list = []
+                # if not rows:
+                #     return jsonify(all_events_list), 200
+                
+                for row in rows:
+                    eid = row[0]
+                    event = {
+                        'eid': eid,
+                        'name': row[1],
+                        'type': row[2],
+                        'info': row[3],
+                        'start_date_time': row[4],
+                        'end_date_time': row[5],
+                        'location': row[6],
+                        'first_prize': row[7],
+                        'second_prize': row[8],
+                        'third_prize': row[9]
+                    }
                     all_events_list.append(event)
+                # print(all_events_list)
             return jsonify(all_events_list), 200
     except (Exception, psycopg2.DatabaseError) as error:
         print(error)
@@ -83,7 +84,10 @@ def delete_event(id):
         with psycopg2.connect(**config) as conn:
             with conn.cursor() as cur:
                 # Executing the selected query
-                cur.execute(f"DELETE FROM EVENT WHERE id='{id}';")
+                try:
+                    cur.execute(f"DELETE FROM EVENT WHERE id='{id}';")
+                except Exception as e:
+                    print(e)
                 return jsonify({'message': 'Event successfully deleted'}), 200
     except (Exception, psycopg2.DatabaseError) as error:
         print(error)

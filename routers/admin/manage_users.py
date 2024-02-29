@@ -108,8 +108,8 @@ def all_organisers():
                         except:
                             print(f'Error fetching events for organiser {oid}')
                         # print(events_sponsored)
-                        print("here here")
-                        print(organiser_row)
+                        # print("here here")
+                        # print(organiser_row)
                         organiser = {
                             'oid':  organiser_row[0],
                             'email': organiser_row[1],
@@ -117,7 +117,7 @@ def all_organisers():
                             'phone': organiser_row[3],
                             'events_sponsored': events_sponsored,
                         }
-                        print(organiser)
+                        # print(organiser)
                         all_organisers_list.append(organiser)
                     return jsonify(all_organisers_list), 200
     except (Exception, psycopg2.DatabaseError) as error:
