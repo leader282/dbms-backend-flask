@@ -10,13 +10,14 @@ from uuid import uuid4
 
 admin_organiser = Blueprint('admin_organiser', __name__)
 
-config  = load_config()
+config = load_config()
+
 
 @admin_organiser.route('/all_organisers', methods=['GET'])
 @jwt_required()
 def all_organisers():
     user_details = get_jwt_header()
-    if(user_details['role'] != 'admin'):
+    if (user_details['role'] != 'admin'):
         return jsonify({'message': 'Unauthorized'}), 401
     try:
         with psycopg2.connect(**config) as conn:
@@ -32,7 +33,8 @@ def all_organisers():
                         oid = organiser_row[0]
                         events_sponsored = []
                         try:
-                            cur.execute(f"SELECT * FROM MANAGES WHERE organiser_id='{oid}';")
+                            cur.execute(
+                                f"SELECT * FROM MANAGES WHERE organiser_id='{oid}';")
                             manages_rows = cur.fetchall()
                             if len(manages_rows):
                                 for manages_row in manages_rows:
@@ -40,7 +42,8 @@ def all_organisers():
                                     if manages_row[4] == 'approved':
                                         event_id = manages_row[0]
                                         try:
-                                            cur.execute(f"SELECT * FROM EVENT WHERE id='{event_id}';")
+                                            cur.execute(
+                                                f"SELECT * FROM EVENT WHERE id='{event_id}';")
                                             event_rows = cur.fetchall()
                                             if len(event_rows):
                                                 events_sponsored.append(
@@ -52,7 +55,8 @@ def all_organisers():
                                                     }
                                                 )
                                         except:
-                                            print(f'Error fetching event {event_id}')
+                                            print(
+                                                f'Error fetching event {event_id}')
                                         # else:
                                         #     print("Not approved")
                         except:
@@ -74,11 +78,12 @@ def all_organisers():
         print(error)
         return jsonify({'message': 'Error Fetching organisers'}), 404
 
+
 @admin_organiser.route('/remove_organiser/<string:id>', methods=['DELETE'])
 @jwt_required()
 def remove_organiser(id):
     user_details = get_jwt_header()
-    if(user_details['role'] != 'admin'):
+    if (user_details['role'] != 'admin'):
         return jsonify({'message': 'Unauthorized'}), 401
     data = request.get_json()
     try:
@@ -90,32 +95,37 @@ def remove_organiser(id):
     except (Exception, psycopg2.DatabaseError) as error:
         print(error)
         return jsonify({'message': 'Error Deleting organiser'}), 404
-    
+
+
 @admin_organiser.route('/add_organiser', methods=['POST'])
 @jwt_required()
 def add_organiser():
     user_details = get_jwt_header()
-    if(user_details['role'] != 'admin'):
+    if (user_details['role'] != 'admin'):
         return jsonify({'message': 'Unauthorized'}), 401
     data = request.get_json()
-    hashed_password = bcrypt.hashpw(data['password'].encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
+    hashed_password = bcrypt.hashpw(data['password'].encode(
+        'utf-8'), bcrypt.gensalt()).decode('utf-8')
     email = data['email']
-    oid = "24OR" + bcrypt.hashpw(email.encode('utf-8'), bcrypt.gensalt()).decode('utf-8')[:16]
+    oid = "24OR" + bcrypt.hashpw(email.encode('utf-8'),
+                                 bcrypt.gensalt()).decode('utf-8')[:16]
     try:
         with psycopg2.connect(**config) as conn:
             with conn.cursor() as cur:
                 # Executing the selected query
                 cur.execute(f"SELECT * FROM ORGANISERS WHERE email='{email}';")
                 rows = cur.fetchall()
-                if(rows):
+                if (rows):
                     return jsonify({'message': 'Organiser already exists'}), 404
                 else:
-                    cur.execute(f"SELECT * FROM STUDENT WHERE email='{email}';")
+                    cur.execute(
+                        f"SELECT * FROM STUDENT WHERE email='{email}';")
                     rows = cur.fetchall()
-                    if(rows):
+                    if (rows):
                         return jsonify({'message': 'User already exists'}), 404
                     else:
-                        cur.execute(f"INSERT INTO ORGANISERS VALUES ('{oid}', '{email}', '{data['name']}', '{data['phone']}', '{hashed_password}');")
+                        cur.execute(
+                            f"INSERT INTO ORGANISERS VALUES ('{oid}', '{email}', '{data['name']}', '{data['phone']}', '{hashed_password}');")
                         return jsonify({'message': 'Organiser successfully registered'}), 200
     except (Exception, psycopg2.DatabaseError) as error:
         print(error)

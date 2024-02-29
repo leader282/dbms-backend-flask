@@ -57,7 +57,7 @@ def remove_student(id):
         with psycopg2.connect(**config) as conn:
             with conn.cursor() as cur:
                 # Executing the selected query
-                cur.execute(f"DELETE FROM STUDENT WHERE id='{id}';")
+                cur.execute(f"DELETE FROM STUDENT WHERE sid='{id}';")
                 return jsonify({'message': 'User successfully deleted'}), 200
     except (Exception, psycopg2.DatabaseError) as error:
         print(error)
@@ -89,3 +89,37 @@ def add_student():
     except (Exception, psycopg2.DatabaseError) as error:
         print(error)
         return jsonify({'message': 'Error Creating student'}), 404
+    
+@admin_student.route('/update_student/<string:id>', methods=['PUT'])
+@jwt_required()
+def update_student(id):
+    user_details = get_jwt_header()
+    if user_details['role'] != 'admin':
+        return jsonify({'message': 'Unauthorized'}), 401
+    data = request.get_json()
+    hashed_password = bcrypt.hashpw(data['password'].encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
+    
+    allowed_fields = ['sid', 'name', 'email', 'roll_number', 'phone', 'college', 'department', 'year', 'type']
+    
+    update_fields = {key: data[key] for key in allowed_fields if key in data}
+
+    try:
+        with psycopg2.connect(**config) as conn:
+            with conn.cursor() as cur:
+                # Constructing the SQL query dynamically based on the available fields
+                cur.execute(f"SELECT * FROM STUDENT WHERE sid='{id}';")
+                rows = cur.fetchall()
+                if(rows):
+                    query = ""
+                    for key, value in update_fields.items():
+                        query += f"{key}='{value}', "
+                    query += f"password='{hashed_password}', "
+                    query = query[:-2]
+                    cur.execute(f"UPDATE STUDENT SET " + query + f" WHERE id='{id}';")
+                    return jsonify({'message': 'Student has been updated successfully'}), 200
+                else:
+                    return jsonify({'message': 'Student doesnot exist'}), 402
+                
+    except (Exception, psycopg2.DatabaseError) as error:
+        print(error)
+        return jsonify({'message': 'Error Updating student'}), 402
