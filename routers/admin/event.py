@@ -73,7 +73,7 @@ def add_event():
         print(error)
         return jsonify({'message': 'Error Adding event'}), 404
 
-@admin_event.route('/delete_event/<int:id>', methods=['DELETE'])
+@admin_event.route('/delete_event/<string:id>', methods=['DELETE'])
 @jwt_required()
 def delete_event(id):
     user_details = get_jwt_header()
@@ -89,9 +89,9 @@ def delete_event(id):
         print(error)
         return jsonify({'message': 'Error Deleting event'}), 404
     
-@admin_event.route('/update_event', methods=['PUT'])
+@admin_event.route('/update_event/<string:id>', methods=['PUT'])
 @jwt_required()
-def update_event():
+def update_event(id):
     user_details = get_jwt_header()
     if user_details['role'] != 'admin':
         return jsonify({'message': 'Unauthorized'}), 401
@@ -108,11 +108,11 @@ def update_event():
                 if data['type'] == 'competition':
                     cur.execute("""
                         UPDATE EVENT 
-                        SET """ + ', '.join(f"{key}='{value}'" for key, value in update_fields.items()) + f" WHERE id='{data['id']}';")
+                        SET """ + ', '.join(f"{key}='{value}'" for key, value in update_fields.items()) + f" WHERE id='{id}';")
                 else:
                     cur.execute("""
                         UPDATE EVENT
-                        SET """ + ', '.join(f"{key}='{value}'" for key, value in update_fields.items()) + f" WHERE id='{data['id']}';")
+                        SET """ + ', '.join(f"{key}='{value}'" for key, value in update_fields.items()) + f" WHERE id='{id}';")
                 return jsonify({'message': 'Event successfully updated'}), 200
     except (Exception, psycopg2.DatabaseError) as error:
         print(error)
