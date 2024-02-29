@@ -56,7 +56,7 @@ def remove_user(id):
         with psycopg2.connect(**config) as conn:
             with conn.cursor() as cur:
                 # Executing the selected query
-                cur.execute(f"DELETE FROM STUDENT WHERE id='{id}';")
+                cur.execute(f"DELETE FROM STUDENT WHERE sid='{id}';")
                 return jsonify({'message': 'User successfully deleted'}), 200
     except (Exception, psycopg2.DatabaseError) as error:
         print(error)
