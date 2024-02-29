@@ -1,5 +1,6 @@
 from flask import Flask, request, jsonify
 from flask import Blueprint
+import bcrypt
 from flask_jwt_extended import JWTManager, create_access_token, jwt_required, get_jwt_identity, get_jwt_header
 from datetime import datetime
 import psycopg2
@@ -7,62 +8,11 @@ from config import load_config
 from uuid import uuid4
 
 
-admin_manage_user = Blueprint('admin_manage_user', __name__)
+admin_organiser = Blueprint('admin_organiser', __name__)
 
 config  = load_config()
 
-@admin_manage_user.route('/all_students', methods=['GET'])
-@jwt_required()
-def all_students():
-    user_details = get_jwt_header()
-    if(user_details['role'] != 'admin'):
-        return jsonify({'message': 'Unauthorized'}), 401
-    try:
-        with psycopg2.connect(**config) as conn:
-            with conn.cursor() as cur:
-                # Executing the selected query
-                cur.execute(f"SELECT * FROM STUDENT;")
-                rows = cur.fetchall()
-                if not rows:
-                    return jsonify({'details': ''}), 200
-                else:
-                    all_students_list = []
-                    for row in rows:
-                        student = {
-                            'sid':  row[0],
-                            'email': row[1],
-                            'name': row[2],
-                            'roll_number': row[3],
-                            'phone': row[4],
-                            'college': row[5],
-                            'department': row[6],
-                            'year': row[7],
-                            'type': row[8]
-                        }
-                        all_students_list.append(student)
-                    return jsonify(all_students_list), 200
-    except (Exception, psycopg2.DatabaseError) as error:
-        print(error)
-        return jsonify({'message': 'Error Fetching events'}), 404
-
-@admin_manage_user.route('/remove_student/<string:id>', methods=['DELETE'])
-@jwt_required()
-def remove_user(id):
-    user_details = get_jwt_header()
-    if(user_details['role'] != 'admin'):
-        return jsonify({'message': 'Unauthorized'}), 401
-    # data = request.get_json()
-    try:
-        with psycopg2.connect(**config) as conn:
-            with conn.cursor() as cur:
-                # Executing the selected query
-                cur.execute(f"DELETE FROM STUDENT WHERE sid='{id}';")
-                return jsonify({'message': 'User successfully deleted'}), 200
-    except (Exception, psycopg2.DatabaseError) as error:
-        print(error)
-        return jsonify({'message': 'Error Deleting user'}), 404
-    
-@admin_manage_user.route('/all_organisers', methods=['GET'])
+@admin_organiser.route('/all_organisers', methods=['GET'])
 @jwt_required()
 def all_organisers():
     user_details = get_jwt_header()
@@ -122,9 +72,9 @@ def all_organisers():
                     return jsonify(all_organisers_list), 200
     except (Exception, psycopg2.DatabaseError) as error:
         print(error)
-        return jsonify({'message': 'Error Fetching events'}), 404
+        return jsonify({'message': 'Error Fetching organisers'}), 404
 
-@admin_manage_user.route('/remove_organiser/<string:id>', methods=['DELETE'])
+@admin_organiser.route('/remove_organiser/<string:id>', methods=['DELETE'])
 @jwt_required()
 def remove_organiser(id):
     user_details = get_jwt_header()
@@ -139,5 +89,34 @@ def remove_organiser(id):
                 return jsonify({'message': 'User successfully deleted'}), 200
     except (Exception, psycopg2.DatabaseError) as error:
         print(error)
-        return jsonify({'message': 'Error Deleting user'}), 404
+        return jsonify({'message': 'Error Deleting organiser'}), 404
     
+@admin_organiser.route('/add_organiser', methods=['POST'])
+@jwt_required()
+def add_organiser():
+    user_details = get_jwt_header()
+    if(user_details['role'] != 'admin'):
+        return jsonify({'message': 'Unauthorized'}), 401
+    data = request.get_json()
+    hashed_password = bcrypt.hashpw(data['password'].encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
+    email = data['email']
+    oid = "24OR" + bcrypt.hashpw(email.encode('utf-8'), bcrypt.gensalt()).decode('utf-8')[:16]
+    try:
+        with psycopg2.connect(**config) as conn:
+            with conn.cursor() as cur:
+                # Executing the selected query
+                cur.execute(f"SELECT * FROM ORGANISERS WHERE email='{email}';")
+                rows = cur.fetchall()
+                if(rows):
+                    return jsonify({'message': 'Organiser already exists'}), 404
+                else:
+                    cur.execute(f"SELECT * FROM STUDENT WHERE email='{email}';")
+                    rows = cur.fetchall()
+                    if(rows):
+                        return jsonify({'message': 'User already exists'}), 404
+                    else:
+                        cur.execute(f"INSERT INTO ORGANISERS VALUES ('{oid}', '{email}', '{data['name']}', '{data['phone']}', '{hashed_password}');")
+                        return jsonify({'message': 'Organiser successfully registered'}), 200
+    except (Exception, psycopg2.DatabaseError) as error:
+        print(error)
+        return jsonify({'message': 'Error Creating organiser'}), 404

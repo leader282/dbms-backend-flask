@@ -11,7 +11,8 @@ from routers.accomodation import accomodation
 from routers.events.event import events
 from routers.events.register import events_register
 from routers.admin.event import admin_event
-from routers.admin.manage_users import admin_manage_user
+from routers.admin.student import admin_student
+from routers.admin.organiser import admin_organiser
 from routers.organiser.winner import winner_settings
 from routers.organiser.event import organiser_event
 from routers.organiser.resource import resource
@@ -29,7 +30,8 @@ app.register_blueprint(auth)
 app.register_blueprint(events, url_prefix='/event')
 app.register_blueprint(events_register, url_prefix='/event')
 app.register_blueprint(admin_event, url_prefix='/admin')
-app.register_blueprint(admin_manage_user, url_prefix='/admin')
+app.register_blueprint(admin_student, url_prefix='/admin')
+app.register_blueprint(admin_organiser, url_prefix='/admin')
 app.register_blueprint(winner_settings, url_prefix='/organiser')
 app.register_blueprint(organiser_event, url_prefix='/organiser')
 app.register_blueprint(resource, url_prefix='/organiser')
