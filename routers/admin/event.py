@@ -26,7 +26,23 @@ def all_events():
                 if not rows:
                     return jsonify({'details': ''}), 200
                 else:
-                    return jsonify({'data': rows}), 200
+                    all_events_list = []
+                    for row in rows:
+                        eid = row[0]
+                        event = {
+                            'eid': eid,
+                            'name': row[1],
+                            'type': row[2],
+                            'info': row[3],
+                            'start_date_time': row[4],
+                            'end_date_time': row[5],
+                            'location': row[6],
+                            'first_prize': row[7],
+                            'second_prize': row[8],
+                            'third_prize': row[9]
+                        }
+                    all_events_list.append(event)
+            return jsonify(all_events_list), 200
     except (Exception, psycopg2.DatabaseError) as error:
         print(error)
         return jsonify({'message': 'Error Fetching events'}), 404

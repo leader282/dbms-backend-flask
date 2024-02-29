@@ -26,7 +26,21 @@ def all_students():
                 if not rows:
                     return jsonify({'details': ''}), 200
                 else:
-                    return jsonify({'data': rows}), 200
+                    all_students_list = []
+                    for row in rows:
+                        student = {
+                            'sid':  row[0],
+                            'email': row[1],
+                            'name': row[2],
+                            'roll_number': row[3],
+                            'phone': row[4],
+                            'college': row[5],
+                            'department': row[6],
+                            'year': row[7],
+                            'type': row[8]
+                        }
+                        all_students_list.append(student)
+                    return jsonify(all_students_list), 200
     except (Exception, psycopg2.DatabaseError) as error:
         print(error)
         return jsonify({'message': 'Error Fetching events'}), 404
@@ -58,12 +72,54 @@ def all_organisers():
         with psycopg2.connect(**config) as conn:
             with conn.cursor() as cur:
                 # Executing the selected query
-                cur.execute(f"SELECT * FROM ORGANISER;")
-                rows = cur.fetchall()
-                if not rows:
+                cur.execute(f"SELECT * FROM ORGANISERS;")
+                organiser_rows = cur.fetchall()
+                if not organiser_rows:
                     return jsonify({'details': ''}), 200
                 else:
-                    return jsonify({'data': rows}), 200
+                    all_organisers_list = []
+                    for organiser_row in organiser_rows:
+                        oid = organiser_row[0]
+                        events_sponsored = []
+                        try:
+                            cur.execute(f"SELECT * FROM MANAGES WHERE organiser_id='{oid}';")
+                            manages_rows = cur.fetchall()
+                            if len(manages_rows):
+                                for manages_row in manages_rows:
+                                    # print(row)
+                                    if manages_row[4] == 'approved':
+                                        event_id = manages_row[0]
+                                        try:
+                                            cur.execute(f"SELECT * FROM EVENT WHERE id='{event_id}';")
+                                            event_rows = cur.fetchall()
+                                            if len(event_rows):
+                                                events_sponsored.append(
+                                                    {
+                                                        'eid': event_id,
+                                                        'name': event_rows[0][1],
+                                                        'payment_status': manages_row[4]
+
+                                                    }
+                                                )
+                                        except:
+                                            print(f'Error fetching event {event_id}')
+                                        # else:
+                                        #     print("Not approved")
+                        except:
+                            print(f'Error fetching events for organiser {oid}')
+                        # print(events_sponsored)
+                        print("here here")
+                        print(organiser_row)
+                        organiser = {
+                            'oid':  organiser_row[0],
+                            'email': organiser_row[1],
+                            'name': organiser_row[2],
+                            'phone': organiser_row[3],
+                            'events_sponsored': events_sponsored,
+                        }
+                        print(organiser)
+                        all_organisers_list.append(organiser)
+                    return jsonify(all_organisers_list), 200
     except (Exception, psycopg2.DatabaseError) as error:
         print(error)
         return jsonify({'message': 'Error Fetching events'}), 404
