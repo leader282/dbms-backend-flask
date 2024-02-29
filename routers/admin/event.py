@@ -110,13 +110,9 @@ def update_event(id):
             with conn.cursor() as cur:
                 # Constructing the SQL query dynamically based on the available fields
                 if data['type'] == 'competition':
-                    cur.execute("""
-                        UPDATE EVENT 
-                        SET """ + ', '.join(f"{key}='{value}'" for key, value in update_fields.items()) + f" WHERE id='{id}';")
+                    cur.execute('UPDATE EVENT SET' + ', '.join(f"{key}='{value}'" for key, value in update_fields.items()) + f" WHERE id='{id}';")
                 else:
-                    cur.execute("""
-                        UPDATE EVENT
-                        SET """ + ', '.join(f"{key}='{value}'" for key, value in update_fields.items()) + f" WHERE id='{id}';")
+                    cur.execute('UPDATE EVENT SET' + ', '.join(f"{key}='{value}'" for key, value in update_fields.items()) + f" WHERE id='{id}';")
                 return jsonify({'message': 'Event successfully updated'}), 200
     except (Exception, psycopg2.DatabaseError) as error:
         print(error)

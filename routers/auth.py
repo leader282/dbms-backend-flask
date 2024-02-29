@@ -73,7 +73,7 @@ def signup_organiser():
                         return jsonify({'message': 'Organiser successfully registered'}), 200
     except (Exception, psycopg2.DatabaseError) as error:
         print(error)
-        return jsonify({'message': 'Error Creating user'}), 404
+        return jsonify({'message': 'Error Creating organiser'}), 404
 
 @auth.route('/login', methods=['POST'])
 def login():
