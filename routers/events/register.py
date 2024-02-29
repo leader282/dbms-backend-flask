@@ -44,11 +44,11 @@ def volunteer_student(event_id):
         with psycopg2.connect(**config) as conn:
             with conn.cursor() as cur:
                 sid = profile_info.get('sid', 0)
-                cur.execute(f"SELECT * FROM PARTICIPATION WHERE student_id='{sid}' AND event_id='{event_id}'")
+                cur.execute(f"SELECT * FROM PARTICIPATION WHERE student_id='{sid}' AND event_id='{event_id}';")
                 rows = cur.fetchall()
                 if len(rows):
                     return jsonify({'message': 'Already registered in this event'}), 404
-                cur.execute(f"SELECT * FROM VOLUNTEERS WHERE student_id='{sid}' AND event_id='{event_id}'")
+                cur.execute(f"SELECT * FROM VOLUNTEERS WHERE student_id='{sid}' AND event_id='{event_id}';")
                 rows = cur.fetchall()
                 if len(rows) == 0:
                     cur.execute(f"INSERT INTO VOLUNTEERS VALUES ('{event_id}', '{sid}', '{info}', '{role}');")
@@ -74,7 +74,7 @@ def sponsor(event_id):
         with psycopg2.connect(**config) as conn:
             with conn.cursor() as cur:
                 oid = profile_info.get('oid', 0)
-                cur.execute(f"SELECT * FROM MANAGES WHERE organiser_id='{oid}' AND event_id='{event_id}'")
+                cur.execute(f"SELECT * FROM MANAGES WHERE organiser_id='{oid}' AND event_id='{event_id}';")
                 rows = cur.fetchall()
                 if len(rows) == 0:
                     cur.execute(f"INSERT INTO MANAGES VALUES ('{event_id}', '{oid}', '{sponsorship_amount}');")
