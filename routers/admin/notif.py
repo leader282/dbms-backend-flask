@@ -15,6 +15,7 @@ config  = load_config()
 @jwt_required()
 def all_notifs():
     user_details = get_jwt_header()
+    print(user_details)
     if(user_details['role'] != 'admin'):
         return jsonify({'message': 'Unauthorized'}), 401
     try:
@@ -56,7 +57,6 @@ def approve_organiser():
                     return jsonify({'message': 'No organiser found'}), 404
                 else:
                     cur.execute(f"UPDATE MANAGES SET request_status='approved' WHERE organiser_id='{oid}' AND event_id='{event_id}';")
-                    cur.execute(f"UPDATE MANAGES SET request_status='rejected' WHERE organiser_id<>'{oid}' AND event_id='{event_id}';")
                     return jsonify({'message': 'Organiser successfully approved'}), 200
     except (Exception, psycopg2.DatabaseError) as error:
         print(error)
