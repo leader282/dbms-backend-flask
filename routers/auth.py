@@ -2,7 +2,7 @@ from flask import request, jsonify
 import bcrypt
 from flask_jwt_extended import create_access_token, jwt_required, get_jwt_header
 import psycopg2
-from config import load_config
+from psql_config import load_config
 from flask import Blueprint
 from uuid import uuid4
 

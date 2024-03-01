@@ -1,7 +1,7 @@
 from flask import request, jsonify
 from flask_jwt_extended import jwt_required, get_jwt_header
 import psycopg2
-from config import load_config
+from psql_config import load_config
 from flask import Blueprint
 
 resource = Blueprint('resource', __name__)

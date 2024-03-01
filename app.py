@@ -2,7 +2,6 @@ from flask import Flask, request, jsonify
 import bcrypt
 from flask_jwt_extended import JWTManager, create_access_token, jwt_required, get_jwt_identity, get_jwt_header
 import psycopg2
-from config import load_config
 from flask_cors import CORS
 from dotenv import load_dotenv
 import os
