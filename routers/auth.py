@@ -26,7 +26,7 @@ def signup_student():
     data = request.get_json()
     hashed_password = bcrypt.hashpw(data['password'].encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
     email = data['email']
-    sid = str(uuid4())[:16]
+    sid = '24ST' + str(uuid4())
     print(f"Password: {data['password']}, Hashed Password: {hashed_password}")
     try:
         with psycopg2.connect(**config) as conn:
@@ -53,7 +53,7 @@ def signup_organiser():
     data = request.get_json()
     hashed_password = bcrypt.hashpw(data['password'].encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
     email = data['email']
-    oid = str(uuid4())
+    oid = '24OR' + str(uuid4())
 
     try:
         with psycopg2.connect(**config) as conn:

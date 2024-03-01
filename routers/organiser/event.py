@@ -36,8 +36,11 @@ def get_an_event(event_id):
                     'third_prize': row[9],
                     'created_at': row[10]
                 }
+                print(f"oid = {oid}, eid = {eid}")
+                print(f"Query: SELECT request_status FROM MANAGES WHERE organiser_id='{oid}' AND event_id='{eid}';")
                 cur.execute(f"SELECT request_status FROM MANAGES WHERE organiser_id='{oid}' AND event_id='{eid}';")
                 rows = cur.fetchall()
+                print(rows)
                 if len(rows) == 0:
                     event['sponsored'] = "no"
                 else:
@@ -86,6 +89,7 @@ def get_an_event(event_id):
                     volunteer_details['info'] = info
                     volunteer_details['role'] = role
                     event['volunteers'].append(volunteer_details)
+                print(event)
                 return jsonify(event), 200
     except (Exception, psycopg2.DatabaseError) as error:
         print(error)
