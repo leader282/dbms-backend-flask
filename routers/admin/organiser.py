@@ -77,15 +77,26 @@ def all_organisers():
 @admin_organiser.route('/remove_organiser/<string:id>', methods=['DELETE'])
 @jwt_required()
 def remove_organiser(id):
+    print(f"ID : {id}")
     user_details = get_jwt_header()
     if(user_details['role'] != 'admin'):
         return jsonify({'message': 'Unauthorized'}), 401
-    data = request.get_json()
+    # data = request.get_json()
+    # print(f"payload : {data}")
     try:
         with psycopg2.connect(**config) as conn:
             with conn.cursor() as cur:
                 # Executing the selected query
-                cur.execute(f"DELETE FROM ORGANISER WHERE id='{id}';")
+                try:
+                    cur.execute(f"SELECT * FROM ORGANISERS WHERE oid='{id}';")
+                    rows = cur.fetchall()
+                    if not rows:
+                        print("No organiser found")
+                        return jsonify({'message': 'No organiser found'}), 404
+                except:
+                    print("Error fetching organiser")
+                    return jsonify({'message': 'Error fetching organiser'}), 404
+                cur.execute(f"DELETE FROM ORGANISERS WHERE oid='{id}';")
                 return jsonify({'message': 'User successfully deleted'}), 200
     except (Exception, psycopg2.DatabaseError) as error:
         print(error)
@@ -98,6 +109,7 @@ def add_organiser():
     if(user_details['role'] != 'admin'):
         return jsonify({'message': 'Unauthorized'}), 401
     data = request.get_json()
+    print(f"payload : {data}")
     hashed_password = bcrypt.hashpw(data['password'].encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
     email = data['email']
     oid = "24OR" + bcrypt.hashpw(email.encode('utf-8'), bcrypt.gensalt()).decode('utf-8')[:16]
@@ -108,15 +120,20 @@ def add_organiser():
                 cur.execute(f"SELECT * FROM ORGANISERS WHERE email='{email}';")
                 rows = cur.fetchall()
                 if(rows):
+                    print("Email already exists")
                     return jsonify({'message': 'Organiser already exists'}), 404
                 else:
                     cur.execute(f"SELECT * FROM STUDENT WHERE email='{email}';")
                     rows = cur.fetchall()
+                    print(f"Rows {rows}")
                     if(rows):
+                        print("Email already exists")
                         return jsonify({'message': 'User already exists'}), 404
                     else:
+                        print("hello")
                         cur.execute(f"INSERT INTO ORGANISERS VALUES ('{oid}', '{email}', '{data['name']}', '{data['phone']}', '{hashed_password}');")
                         return jsonify({'message': 'Organiser successfully registered'}), 200
     except (Exception, psycopg2.DatabaseError) as error:
         print(error)
         return jsonify({'message': 'Error Creating organiser'}), 404
+    
