@@ -109,11 +109,25 @@ def update_event(id):
         with psycopg2.connect(**config) as conn:
             with conn.cursor() as cur:
                 # Constructing the SQL query dynamically based on the available fields
-                if data['type'] == 'competition':
-                    cur.execute('UPDATE EVENT SET' + ', '.join(f"{key}='{value}'" for key, value in update_fields.items()) + f" WHERE id='{id}';")
+                if data['type'] != 'competition':
+                    query = ""
+                    for key, value in update_fields.items():
+                        if value == 'None':
+                            query += f'{key}=NULL, '
+                        else:
+                            query += f"{key}='{value}', "
+                    query = query[:-2]
+                    cur.execute('UPDATE EVENT SET ' + query + f" WHERE id='{id}';")
                 else:
-                    cur.execute('UPDATE EVENT SET' + ', '.join(f"{key}='{value}'" for key, value in update_fields.items()) + f" WHERE id='{id}';")
+                    query = ""
+                    for key, value in update_fields.items():
+                        if value == 'None':
+                            return jsonify({'message': 'Competition cannot have null values'}), 402
+                        else:
+                            query += f"{key}='{value}', "
+                    query = query[:-2]
+                    cur.execute('UPDATE EVENT SET ' + query + f" WHERE id='{id}';")
                 return jsonify({'message': 'Event successfully updated'}), 200
     except (Exception, psycopg2.DatabaseError) as error:
         print(error)
-        return jsonify({'message': 'Error Updating event'}), 404
+        return jsonify({'message': 'Error Updating event'}), 402
