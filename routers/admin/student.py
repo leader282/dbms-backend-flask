@@ -69,7 +69,7 @@ def add_student():
     hashed_password = bcrypt.hashpw(data['password'].encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
     email = data['email']
     sid = str(uuid4())[:16]
-    print(f"Password: {data['password']}, Hashed Password: {hashed_password}")
+    # print(f"Password: {data['password']}, Hashed Password: {hashed_password}")
     try:
         with psycopg2.connect(**config) as conn:
             with conn.cursor() as cur:

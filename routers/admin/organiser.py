@@ -82,7 +82,7 @@ def all_organisers():
 @admin_organiser.route('/remove_organiser/<string:id>', methods=['DELETE'])
 @jwt_required()
 def remove_organiser(id):
-    print(f"ID : {id}")
+    # print(f"ID : {id}")
     user_details = get_jwt_header()
     if (user_details['role'] != 'admin'):
         return jsonify({'message': 'Unauthorized'}), 401
@@ -119,7 +119,7 @@ def add_organiser():
         'utf-8'), bcrypt.gensalt()).decode('utf-8')
     email = data['email']
     oid = str(uuid4())[:16]
-    print(f"data : {data}")
+    # print(f"data : {data}")
     try:
         with psycopg2.connect(**config) as conn:
             with conn.cursor() as cur:

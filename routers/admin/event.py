@@ -8,7 +8,6 @@ from uuid import uuid4
 
 
 admin_event = Blueprint('admin_event', __name__)
-
 config  = load_config()
 
 @admin_event.route('/events', methods=['GET'])

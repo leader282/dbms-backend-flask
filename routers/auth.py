@@ -79,7 +79,7 @@ def signup_organiser():
 def login():
     data = request.get_json()
     email = data['email']
-    print(email)
+    # print(email)
     password = data['password']
     # print(email, password)
     try:
