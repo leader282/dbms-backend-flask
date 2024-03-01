@@ -141,3 +141,38 @@ def add_organiser():
     except (Exception, psycopg2.DatabaseError) as error:
         print(error)
         return jsonify({'message': 'Error Creating organiser'}), 404
+
+
+@admin_organiser.route('/update_organiser/<string:id>', methods=['PUT'])
+@jwt_required()
+def update_organiser(id):
+    user_details = get_jwt_header()
+    if user_details['role'] != 'admin':
+        return jsonify({'message': 'Unauthorized'}), 401
+    data = request.get_json()
+    hashed_password = bcrypt.hashpw(data['password'].encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
+    
+    allowed_fields = ['oid', 'name', 'email', 'phone']
+    
+    update_fields = {key: data[key] for key in allowed_fields if key in data}
+
+    try:
+        with psycopg2.connect(**config) as conn:
+            with conn.cursor() as cur:
+                # Constructing the SQL query dynamically based on the available fields
+                cur.execute(f"SELECT * FROM ORGANISERS WHERE oid='{id}';")
+                rows = cur.fetchall()
+                if(rows):
+                    query = ""
+                    for key, value in update_fields.items():
+                        query += f"{key}='{value}', "
+                    query += f"password='{hashed_password}', "
+                    query = query[:-2]
+                    cur.execute(f"UPDATE ORGANISERS SET " + query + f" WHERE id='{id}';")
+                    return jsonify({'message': 'Organiser has been updated successfully'}), 200
+                else:
+                    return jsonify({'message': 'Organiser does not exist'}), 402
+                
+    except (Exception, psycopg2.DatabaseError) as error:
+        print(error)
+        return jsonify({'message': 'Error Updating organiser'}), 402
