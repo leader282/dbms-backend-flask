@@ -118,8 +118,7 @@ def add_organiser():
     hashed_password = bcrypt.hashpw(data['password'].encode(
         'utf-8'), bcrypt.gensalt()).decode('utf-8')
     email = data['email']
-    oid = "24OR" + bcrypt.hashpw(email.encode('utf-8'),
-                                 bcrypt.gensalt()).decode('utf-8')[:16]
+    oid = str(uuid4())
     try:
         with psycopg2.connect(**config) as conn:
             with conn.cursor() as cur:

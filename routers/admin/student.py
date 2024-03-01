@@ -68,7 +68,7 @@ def add_student():
     data = request.get_json()
     hashed_password = bcrypt.hashpw(data['password'].encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
     email = data['email']
-    sid = "24DB" + bcrypt.hashpw(email.encode('utf-8'), bcrypt.gensalt()).decode('utf-8')[:16]
+    sid = str(uuid4())[:16]
     print(f"Password: {data['password']}, Hashed Password: {hashed_password}")
     try:
         with psycopg2.connect(**config) as conn:
@@ -90,14 +90,13 @@ def add_student():
         print(error)
         return jsonify({'message': 'Error Creating student'}), 404
     
-@admin_student.route('/update_student/<string:id>', methods=['PUT'])
+@admin_student.route('/update_student', methods=['PUT'])
 @jwt_required()
-def update_student(id):
+def update_student():
     user_details = get_jwt_header()
     if user_details['role'] != 'admin':
         return jsonify({'message': 'Unauthorized'}), 401
     data = request.get_json()
-    hashed_password = bcrypt.hashpw(data['password'].encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
     
     allowed_fields = ['sid', 'name', 'email', 'roll_number', 'phone', 'college', 'department', 'year', 'type']
     
@@ -107,15 +106,17 @@ def update_student(id):
         with psycopg2.connect(**config) as conn:
             with conn.cursor() as cur:
                 # Constructing the SQL query dynamically based on the available fields
-                cur.execute(f"SELECT * FROM STUDENT WHERE sid='{id}';")
+                cur.execute(f"SELECT * FROM STUDENT WHERE sid='{data['sid']}';")
                 rows = cur.fetchall()
+                # print(f"Rows: {rows}")
                 if(rows):
                     query = ""
                     for key, value in update_fields.items():
                         query += f"{key}='{value}', "
-                    query += f"password='{hashed_password}', "
+                    # query += f"password='{hashed_password}', "
                     query = query[:-2]
-                    cur.execute(f"UPDATE STUDENT SET " + query + f" WHERE id='{id}';")
+                    # print(f"Query: {query}")
+                    cur.execute(f"UPDATE STUDENT SET " + query + f" WHERE sid='{data['sid']}';")
                     return jsonify({'message': 'Student has been updated successfully'}), 200
                 else:
                     return jsonify({'message': 'Student doesnot exist'}), 402
