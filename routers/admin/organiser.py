@@ -118,7 +118,8 @@ def add_organiser():
     hashed_password = bcrypt.hashpw(data['password'].encode(
         'utf-8'), bcrypt.gensalt()).decode('utf-8')
     email = data['email']
-    oid = str(uuid4())
+    oid = str(uuid4())[:16]
+    print(f"data : {data}")
     try:
         with psycopg2.connect(**config) as conn:
             with conn.cursor() as cur:
@@ -126,12 +127,14 @@ def add_organiser():
                 cur.execute(f"SELECT * FROM ORGANISERS WHERE email='{email}';")
                 rows = cur.fetchall()
                 if (rows):
+                    print("Organiser already exists")
                     return jsonify({'message': 'Organiser already exists'}), 404
                 else:
                     cur.execute(
                         f"SELECT * FROM STUDENT WHERE email='{email}';")
                     rows = cur.fetchall()
                     if (rows):
+                        print("User already exists")
                         return jsonify({'message': 'User already exists'}), 404
                     else:
                         cur.execute(
@@ -142,14 +145,13 @@ def add_organiser():
         return jsonify({'message': 'Error Creating organiser'}), 404
 
 
-@admin_organiser.route('/update_organiser/<string:id>', methods=['PUT'])
+@admin_organiser.route('/update_organiser', methods=['PUT'])
 @jwt_required()
-def update_organiser(id):
+def update_organiser():
     user_details = get_jwt_header()
     if user_details['role'] != 'admin':
         return jsonify({'message': 'Unauthorized'}), 401
     data = request.get_json()
-    hashed_password = bcrypt.hashpw(data['password'].encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
     
     allowed_fields = ['oid', 'name', 'email', 'phone']
     
@@ -159,15 +161,14 @@ def update_organiser(id):
         with psycopg2.connect(**config) as conn:
             with conn.cursor() as cur:
                 # Constructing the SQL query dynamically based on the available fields
-                cur.execute(f"SELECT * FROM ORGANISERS WHERE oid='{id}';")
+                cur.execute(f"SELECT * FROM ORGANISERS WHERE oid='{data['oid']}';")
                 rows = cur.fetchall()
                 if(rows):
                     query = ""
                     for key, value in update_fields.items():
                         query += f"{key}='{value}', "
-                    query += f"password='{hashed_password}', "
                     query = query[:-2]
-                    cur.execute(f"UPDATE ORGANISERS SET " + query + f" WHERE id='{id}';")
+                    cur.execute(f"UPDATE ORGANISERS SET " + query + f" WHERE oid='{data['oid']}';")
                     return jsonify({'message': 'Organiser has been updated successfully'}), 200
                 else:
                     return jsonify({'message': 'Organiser does not exist'}), 402
