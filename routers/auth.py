@@ -5,7 +5,7 @@ import psycopg2
 from psql_config import load_config
 from flask import Blueprint
 from uuid import uuid4
-
+from mail import *
 auth = Blueprint('auth', __name__)
 
 # Function to connect to the PostgreSQL database server
@@ -179,6 +179,33 @@ def create_admin():
         print(error)
         return jsonify({'message': 'Error Creating admin'}), 404
 
+
+@auth.route('/forgot_password', methods=['POST'])
+def forgot_password():
+    data = request.get_json()
+    email = data['email']
+    try:
+        with psycopg2.connect(**config) as conn:
+            with conn.cursor() as cur:
+                # Executing the selected query
+                cur.execute(f"SELECT * FROM STUDENT WHERE email='{email}';")
+                rows = cur.fetchall()
+                if not rows:
+                    return jsonify({'message': 'User does not exist'}), 404
+                else:
+                    new_password = str(uuid4())[:8]
+                    print(new_password)
+                    hashed_password = bcrypt.hashpw(new_password.encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
+                    cur.execute(f"UPDATE STUDENT SET password='{hashed_password}' WHERE email='{email}';")
+                    print('Password updated')
+                    user_name = rows[0][2]
+                    body = forgot_pass_body(new_password, user_name)
+                    send_mail(email, 'Forgot Password', body)
+                    return jsonify({'message': 'Password reset successfully'}), 200
+    except (Exception, psycopg2.DatabaseError) as error:
+        print(error)
+        return jsonify({'message': 'Error resetting password'}), 404
+    
 
 
 # # Route for token refresh

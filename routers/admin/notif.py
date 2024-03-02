@@ -5,7 +5,7 @@ from datetime import datetime
 import psycopg2
 from psql_config import load_config
 from uuid import uuid4
-
+from mail import *
 
 admin_notif = Blueprint('admin_notif', __name__)
 
@@ -52,11 +52,14 @@ def approve_organiser():
                 # Executing the selected query
                 cur.execute(f"SELECT * FROM MANAGES WHERE organiser_id='{oid}' AND event_id='{event_id}';")
                 rows = cur.fetchall()
+                organiser_name = rows[0][2]
                 if not rows:
                     return jsonify({'message': 'No organiser found'}), 404
                 else:
                     cur.execute(f"UPDATE MANAGES SET request_status='approved' WHERE organiser_id='{oid}' AND event_id='{event_id}';")
                     cur.execute(f"UPDATE MANAGES SET request_status='rejected' WHERE organiser_id<>'{oid}' AND event_id='{event_id}';")
+                    body = sponsor_approval_body(organiser_name, event_id)
+                    send_mail(rows[0][1], 'Congratulations!!!', body)
                     return jsonify({'message': 'Organiser successfully approved'}), 200
     except (Exception, psycopg2.DatabaseError) as error:
         print(error)
