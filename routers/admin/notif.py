@@ -21,7 +21,7 @@ def all_notifs():
     try:
         with psycopg2.connect(**config) as conn:
             with conn.cursor() as cur:
-                cur.execute(f"SELECT event_id, organiser_id, ORGANISERS.name, ORGANISERS.email, EVENT.name FROM EVENT, MANAGES, ORGANISERS WHERE organiser_id=oid AND event_id=id AND request_status='pending';")
+                cur.execute(f"SELECT event_id, organiser_id, ORGANISERS.name, ORGANISERS.email, sponsorship_amount EVENT.name FROM EVENT, MANAGES, ORGANISERS WHERE organiser_id=oid AND event_id=id AND request_status='pending';")
                 rows = cur.fetchall()
                 all_notifs_list = []
                 for row in rows:
@@ -30,7 +30,8 @@ def all_notifs():
                         'organiser_id': row[1],
                         'oname': row[2],
                         'email': row[3],
-                        'ename': row[4]
+                        'ename': row[4],
+                        'sponsorship_amount': row[5]
                     }
                     all_notifs_list.append(notif)
                 return jsonify(all_notifs_list), 200
@@ -46,7 +47,7 @@ def approve_organiser():
         return jsonify({'message': 'Unauthorized'}), 401
     data = request.get_json()
     oid = data['oid']
-    event_id = data['event_id']
+    event_id = data['eid']
     try:
         with psycopg2.connect(**config) as conn:
             with conn.cursor() as cur:
@@ -70,7 +71,7 @@ def reject_organiser():
         return jsonify({'message': 'Unauthorized'}), 401
     data = request.get_json()
     oid = data['oid']
-    event_id = data['event_id']
+    event_id = data['eid']
     try:
         with psycopg2.connect(**config) as conn:
             with conn.cursor() as cur:

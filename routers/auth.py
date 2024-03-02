@@ -160,7 +160,7 @@ def create_admin():
     data = request.get_json()
     admin_id = "24AD" + str(uuid4())[:16]
     admin_email = data['email']
-    admin_password = "admin"
+    admin_password = data['password']
     admin_name = data['name']
     data = request.get_json()
     hashed_password = bcrypt.hashpw(admin_password.encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
