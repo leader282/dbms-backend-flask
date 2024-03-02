@@ -23,24 +23,34 @@ def set_winners(event_id):
                 cur.execute(f"SELECT * FROM WINNERS WHERE event_id='{event_id}';")
                 rows = cur.fetchall()
                 if len(rows):
+                    # print(rows)
                     return jsonify({'message': 'Winners already set'}), 404
                 else:
                     cur.execute(f"INSERT INTO WINNERS VALUES ('{event_id}', '{sid1}', '{sid2}', '{sid3}');")
+                    
                     try:
-                        for i in range(1,4):
-                            cur.execute(f"SELECT name FROM STUDENT WHERE id='{request.get_json()[f'sid{i}']}';")
+                        try:
+                            cur.execute(f"SELECT name FROM EVENT WHERE id='{event_id}';")
                             rows = cur.fetchall()
+                            event_name = rows[0][0]
+                        except:
+                            event_name = 'the event'
+
+                        for i in range(1,4):
+                            cur.execute(f"SELECT name, email FROM STUDENT WHERE sid='{request.get_json()[f'sid{i}']}';")
+                            rows = cur.fetchall()
+                            # print(rows)
                             if len(rows):
                                 name = rows[0][0]
                                 if i == 1:
-                                    body = first_prize_body(event_id, name)
+                                    body = first_prize_body(event_name, name)
                                 elif i == 2:
-                                    body = second_prize_body(event_id, name)
+                                    body = second_prize_body(event_name, name)
                                 else:
-                                    body = third_prize_body(event_id, name)
+                                    body = third_prize_body(event_name, name)
                                 send_mail(
                                     to=rows[0][1],
-                                    subject=f"Congratulations! You have won a prize in {event_id}",
+                                    subject=f"Congratulations! You have won a prize in {event_name}",
                                     body=body
                                 )
                     except Exception as e:
