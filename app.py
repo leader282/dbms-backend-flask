@@ -18,11 +18,24 @@ from routers.organiser.event import organiser_event
 from routers.organiser.resource import resource
 from routers.organiser.profile import profiles
 from routers.organiser.auth import organiser_auth
+from flask_mail import Mail
+
 from routers.student.auth import student_auth
 
 app = Flask(__name__)
 CORS(app)
 load_dotenv()
+app.config['MAIL_SERVER'] = 'smtp.fastmail.com'
+app.config['MAIL_PORT'] = 465
+app.config['MAIL_USERNAME'] = os.environ.get('MAIL_USERNAME')
+app.config['MAIL_PASSWORD'] = os.environ.get('MAIL_PASSWORD')
+app.config['MAIL_USE_TLS'] = False
+app.config['MAIL_USE_SSL'] = True
+
+mail = Mail(app)
+
+
+# mail = Mail(app)
 
 app.config['JWT_SECRET_KEY'] = os.environ.get('JWT_SECRET_KEY')
 jwt = JWTManager(app)
@@ -44,7 +57,7 @@ app.register_blueprint(student_auth, url_prefix='/student')
 
 
 @app.route('/')
-def hello():
+def hello_world():
     return 'Hello, World!'
 
 

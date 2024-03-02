@@ -3,6 +3,7 @@ from flask_jwt_extended import jwt_required, get_jwt_header
 import psycopg2
 from psql_config import load_config
 from flask import Blueprint
+from mail import *
 
 winner_settings = Blueprint('winner_settings', __name__)
 config  = load_config()
@@ -25,6 +26,27 @@ def set_winners(event_id):
                     return jsonify({'message': 'Winners already set'}), 404
                 else:
                     cur.execute(f"INSERT INTO WINNERS VALUES ('{event_id}', '{sid1}', '{sid2}', '{sid3}');")
+                    try:
+                        for i in range(1,4):
+                            cur.execute(f"SELECT name FROM STUDENT WHERE id='{request.get_json()[f'sid{i}']}';")
+                            rows = cur.fetchall()
+                            if len(rows):
+                                name = rows[0][0]
+                                if i == 1:
+                                    body = first_prize_body(event_id, name)
+                                elif i == 2:
+                                    body = second_prize_body(event_id, name)
+                                else:
+                                    body = third_prize_body(event_id, name)
+                                send_mail(
+                                    to=rows[0][1],
+                                    subject=f"Congratulations! You have won a prize in {event_id}",
+                                    body=body
+                                )
+                    except Exception as e:
+                        print(e)
+                        return jsonify({'message': 'Error sending mail'}), 404
+
                     return jsonify({'message': 'Winners set successfully'}), 200
     except (Exception, psycopg2.DatabaseError) as error:
         print(error)
