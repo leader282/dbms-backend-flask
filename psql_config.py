@@ -11,7 +11,7 @@ def load_config(filename='database.ini', section='postgresql'):
     # get section, default to postgresql
     config = {}
     if parser.has_section(section):
-        params = parser.items(section, raw=True, vars=os.environ)
+        params = parser.items(section)
         for param in params:
             config[param[0]] = os.environ.get(f'{param[1]}')
     else:

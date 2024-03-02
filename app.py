@@ -17,7 +17,8 @@ from routers.organiser.winner import winner_settings
 from routers.organiser.event import organiser_event
 from routers.organiser.resource import resource
 from routers.organiser.profile import profiles
-from routers.student.edit_student import student
+from routers.organiser.auth import organiser_auth
+from routers.student.auth import student_auth
 
 app = Flask(__name__)
 CORS(app)
@@ -38,7 +39,8 @@ app.register_blueprint(winner_settings, url_prefix='/organiser')
 app.register_blueprint(organiser_event, url_prefix='/organiser')
 app.register_blueprint(resource, url_prefix='/organiser')
 app.register_blueprint(profiles, url_prefix='/organiser')
-app.register_blueprint(student, url_prefix='/student')
+app.register_blueprint(organiser_auth, url_prefix='/organiser')
+app.register_blueprint(student_auth, url_prefix='/student')
 
 
 @app.route('/')
