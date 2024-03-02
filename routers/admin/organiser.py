@@ -38,27 +38,22 @@ def all_organisers():
                             manages_rows = cur.fetchall()
                             if len(manages_rows):
                                 for manages_row in manages_rows:
-                                    # print(row)
-                                    if manages_row[4] == 'approved':
-                                        event_id = manages_row[0]
-                                        try:
-                                            cur.execute(
-                                                f"SELECT * FROM EVENT WHERE id='{event_id}';")
-                                            event_rows = cur.fetchall()
-                                            if len(event_rows):
-                                                events_sponsored.append(
-                                                    {
-                                                        'eid': event_id,
-                                                        'name': event_rows[0][1],
-                                                        'payment_status': manages_row[4]
-
-                                                    }
-                                                )
-                                        except:
-                                            print(
-                                                f'Error fetching event {event_id}')
-                                        # else:
-                                        #     print("Not approved")
+                                    event_id = manages_row[0]
+                                    try:
+                                        cur.execute(
+                                            f"SELECT * FROM EVENT WHERE id='{event_id}';")
+                                        event_rows = cur.fetchall()
+                                        if len(event_rows):
+                                            events_sponsored.append(
+                                                {
+                                                    'eid': event_id,
+                                                    'name': event_rows[0][1],
+                                                    'sponsor_status': manages_row[4]
+                                                }
+                                            )
+                                    except:
+                                        print(
+                                            f'Error fetching event {event_id}')
                         except:
                             print(f'Error fetching events for organiser {oid}')
                         # print(events_sponsored)

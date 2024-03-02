@@ -93,15 +93,7 @@ def login():
                     hashed_password = rows[0][9]
                     if bcrypt.checkpw(password.encode('utf-8'), hashed_password.encode('utf-8')):
                         profile_info = {
-                            'sid': rows[0][0],
-                            'email': rows[0][1],
-                            'name': rows[0][2],
-                            'phone': rows[0][4],
-                            'roll_number': rows[0][3],
-                            'college': rows[0][5],
-                            'department': rows[0][6],
-                            'year': rows[0][7],
-                            'type': rows[0][8]
+                            'sid': rows[0][0]
                         }
                         access_token = create_access_token(identity=email, additional_headers=profile_info, expires_delta=False)
                         return jsonify({'access_token': access_token}), 200
@@ -114,10 +106,7 @@ def login():
                         hashed_password = rows[0][4]
                         if bcrypt.checkpw(password.encode('utf-8'), hashed_password.encode('utf-8')):
                             profile_info = {
-                                'oid': rows[0][0],
-                                'email': rows[0][1],
-                                'name': rows[0][2],
-                                'phone': rows[0][3]
+                                'oid': rows[0][0]
                             }
                             access_token = create_access_token(identity=email, additional_headers=profile_info, expires_delta=False)
                             return jsonify({'access_token': access_token}), 200
@@ -132,8 +121,6 @@ def login():
                             if bcrypt.checkpw(password.encode('utf-8'), hashed_password.encode('utf-8')):
                                 profile_info = {
                                     'id': rows[0][0],
-                                    'email': rows[0][1],
-                                    'name': rows[0][2],
                                     'role': 'admin'
                                 }
                                 access_token = create_access_token(identity=email,additional_headers=profile_info, expires_delta=False)
@@ -150,8 +137,47 @@ def login():
 @jwt_required()
 def profile():
     profile_info = get_jwt_header()
-    # print(profile_info)
-    return profile_info
+    try:
+        with psycopg2.connect(**config) as conn:
+            with conn.cursor() as cur:
+                if profile_info.get('sid', 0):
+                    cur.execute(f"SELECT * FROM STUDENT WHERE sid='{profile_info.get('sid', 0)}'")
+                    rows = cur.fetchall()[0]
+                    profile_content = {
+                        'sid': rows[0],
+                        'email': rows[1],
+                        'name': rows[2],
+                        'phone': rows[4],
+                        'roll_number': rows[3],
+                        'college': rows[5],
+                        'department': rows[6],
+                        'year': rows[7],
+                        'type': rows[8]
+                    }
+                elif profile_info.get('oid', 0):
+                    cur.execute(f"SELECT * FROM ORGANISERS WHERE oid='{profile_info.get('oid', 0)}'")
+                    rows = cur.fetchall()[0]
+                    profile_content = {
+                        'oid': rows[0],
+                        'email': rows[1],
+                        'name': rows[2],
+                        'phone': rows[3]
+                    }
+                elif profile_info.get('role', 0):
+                    cur.execute(f"SELECT * FROM ADMIN WHERE id='{profile_info.get('id', 0)}'")
+                    rows = cur.fetchall()[0]
+                    profile_content = {
+                        'id': rows[0],
+                        'email': rows[1],
+                        'name': rows[2],
+                        'role': 'admin'
+                    }
+                else:
+                    return jsonify({'message': 'Not valid user'}), 404
+                return jsonify(profile_content), 200
+    except (Exception, psycopg2.DatabaseError) as error:
+        print(error)
+        return jsonify({'message': 'Error fetching profile'}), 404
 
 
 @auth.route('/create_admin', methods=['POST'])

@@ -20,10 +20,15 @@ def edit_student():
         return jsonify({'message': 'User doesnot have access here'}), 404
     data = request.get_json()
     sid = profile_info.get('sid', 0)
-    hashed_password = bcrypt.hashpw(data['password'].encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
-    allowed_fields = ['name', 'roll_number', 'phone', 'college', 'department', 'year', 'password']
-    update_fields = {key: data[key] for key in allowed_fields if key in data}
-    update_fields['password'] = hashed_password
+    if data['password'] == "":
+        allowed_fields = ['name', 'roll_number', 'phone', 'college', 'department', 'year']
+        update_fields = {key: data[key] for key in allowed_fields if key in data}
+    else:
+        hashed_password = bcrypt.hashpw(data['password'].encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
+        allowed_fields = ['name', 'roll_number', 'phone', 'college', 'department', 'year', 'password']
+        update_fields = {key: data[key] for key in allowed_fields if key in data}
+        update_fields['password'] = hashed_password
+
 
     try:
         with psycopg2.connect(**config) as conn:
