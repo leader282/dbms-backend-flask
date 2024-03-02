@@ -22,10 +22,10 @@ def get_accomodation():
         with psycopg2.connect(**config) as conn:
             with conn.cursor() as cur:
                 # Executing the selected query
-                cur.execute(f"SELECT location, check_in, check_out, food_type, cost, payment_status FROM accomodated_at, logistics WHERE participant_id='{user_id}' and accomodated_at.logistics_id = logistics.id;")
+                cur.execute(f"SELECT location, check_in, check_out, food_type, cost, payment_status FROM accomodated_at, accomodation WHERE participant_id='{user_id}' and accomodated_at.logistics_id = accomodation.id;")
                 rows = cur.fetchall()
                 if not rows:
-                    return jsonify({'details': ''}), 200
+                    return jsonify({}), 200
                 else:
                     return jsonify({'data': rows}), 200
     except (Exception, psycopg2.DatabaseError) as error:
