@@ -6,7 +6,6 @@ import psycopg2
 from psql_config import load_config
 from uuid import uuid4
 
-
 admin_event = Blueprint('admin_event', __name__)
 config  = load_config()
 
