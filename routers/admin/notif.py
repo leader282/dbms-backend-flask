@@ -59,7 +59,7 @@ def approve_organiser():
                     return jsonify({'message': 'No organiser found'}), 404
                 else:
                     cur.execute(f"UPDATE MANAGES SET request_status='approved' WHERE organiser_id='{oid}' AND event_id='{event_id}';")
-                    cur.execute(f"UPDATE MANAGES SET request_status='rejected' WHERE organiser_id<>'{oid}' AND event_id='{event_id}';")
+                    # cur.execute(f"UPDATE MANAGES SET request_status='rejected' WHERE organiser_id<>'{oid}' AND event_id='{event_id}';")
                     body = sponsor_approval_body(organiser_name, event_id)
                     send_mail(rows[0][1], 'Congratulations!!!', body)
                     return jsonify({'message': 'Organiser successfully approved'}), 200
