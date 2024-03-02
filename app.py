@@ -19,6 +19,7 @@ from routers.organiser.resource import resource
 from routers.organiser.profile import profiles
 from flask_mail import Mail
 
+from routers.student.edit_student import student
 
 app = Flask(__name__)
 CORS(app)
@@ -50,6 +51,7 @@ app.register_blueprint(winner_settings, url_prefix='/organiser')
 app.register_blueprint(organiser_event, url_prefix='/organiser')
 app.register_blueprint(resource, url_prefix='/organiser')
 app.register_blueprint(profiles, url_prefix='/organiser')
+app.register_blueprint(student, url_prefix='/student')
 
 
 @app.route('/')

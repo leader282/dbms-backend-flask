@@ -78,9 +78,9 @@ def sponsor(event_id):
                 rows = cur.fetchall()
                 if len(rows) == 0:
                     cur.execute(f"INSERT INTO MANAGES VALUES ('{event_id}', '{oid}', '{sponsorship_amount}');")
-                    return jsonify({'message': 'Event has been sponsored successfully'}), 200
+                    return jsonify({'message': 'Event has been applied for sponsoring successfully'}), 200
                 else:
-                    return jsonify({'message': 'Already sponsored this event'}), 404
+                    return jsonify({'message': 'Already applied for sponsoring this event'}), 404
     except (Exception, psycopg2.DatabaseError) as error:
         print(error)
         return jsonify({'message': 'Error in sponsoring'}), 404
