@@ -24,24 +24,21 @@ def all_students():
                 # Executing the selected query
                 cur.execute(f"SELECT * FROM STUDENT;")
                 rows = cur.fetchall()
-                if not rows:
-                    return jsonify({'details': ''}), 200
-                else:
-                    all_students_list = []
-                    for row in rows:
-                        student = {
-                            'sid':  row[0],
-                            'email': row[1],
-                            'name': row[2],
-                            'roll_number': row[3],
-                            'phone': row[4],
-                            'college': row[5],
-                            'department': row[6],
-                            'year': row[7],
-                            'type': row[8]
-                        }
-                        all_students_list.append(student)
-                    return jsonify(all_students_list), 200
+                all_students_list = []
+                for row in rows:
+                    student = {
+                        'sid':  row[0],
+                        'email': row[1],
+                        'name': row[2],
+                        'roll_number': row[3],
+                        'phone': row[4],
+                        'college': row[5],
+                        'department': row[6],
+                        'year': row[7],
+                        'type': row[8]
+                    }
+                    all_students_list.append(student)
+                return jsonify(all_students_list), 200
     except (Exception, psycopg2.DatabaseError) as error:
         print(error)
         return jsonify({'message': 'Error Fetching events'}), 404
