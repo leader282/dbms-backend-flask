@@ -53,14 +53,24 @@ def approve_organiser():
                 # Executing the selected query
                 cur.execute(f"SELECT * FROM MANAGES WHERE organiser_id='{oid}' AND event_id='{event_id}';")
                 rows = cur.fetchall()
-                organiser_name = rows[0][2]
+                # organiser_name = rows[0][2]
                 if not rows:
                     return jsonify({'message': 'No organiser found'}), 404
                 else:
                     cur.execute(f"UPDATE MANAGES SET request_status='approved' WHERE organiser_id='{oid}' AND event_id='{event_id}';")
                     # cur.execute(f"UPDATE MANAGES SET request_status='rejected' WHERE organiser_id<>'{oid}' AND event_id='{event_id}';")
-                    body = sponsor_approval_body(organiser_name, event_id)
-                    send_mail(rows[0][1], 'Congratulations!!!', body)
+                    # print(f"organiser_name: {organiser_name}, event_id: {event_id}")
+                    # body = sponsor_approval_body(organiser_name, event_id)
+                    # print(rows[0])
+                    cur.execute(f"SELECT email,name FROM ORGANISERS WHERE oid='{oid}';")
+                    org_details = cur.fetchall()
+                    orgnaiser_name = org_details[0][1]
+                    print(f"orgnaiser_name: {orgnaiser_name}")
+                    print(f"email: {org_details[0][0]}")
+                    cur.execute(f"SELECT name FROM EVENT WHERE id='{event_id}';")
+                    event_name = cur.fetchall()[0][0]
+                    body = sponsor_approval_body(event_name,orgnaiser_name)
+                    send_mail(org_details[0][0], 'Congratulations!!!', body)
                     return jsonify({'message': 'Organiser successfully approved'}), 200
     except (Exception, psycopg2.DatabaseError) as error:
         print(error)

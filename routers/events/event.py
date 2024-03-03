@@ -63,8 +63,11 @@ def get_an_event(event_id):
     try:
         with psycopg2.connect(**config) as conn:
             with conn.cursor() as cur:
+                # print(event_id)
+                # print(f"SELECT * FROM EVENT LEFT OUTER JOIN WINNERS ON id=event_id WHERE id='{event_id}';")
                 cur.execute(f"SELECT * FROM EVENT LEFT OUTER JOIN WINNERS ON id=event_id WHERE id='{event_id}';")
                 row = cur.fetchall()
+                # print(row)
                 if len(row) == 0:
                     return jsonify({'message': 'No such event exists'}), 404
                 row = row[0]
@@ -115,6 +118,8 @@ def get_an_event(event_id):
                         event['registered'] = True
                     else:
                         event['registered'] = False
+                    # print(event)
+                    # print(profile_info)
                     if profile_info['type'] == 'internal':
                         cur.execute(f"SELECT * FROM VOLUNTEERS WHERE student_id='{sid}' AND event_id='{eid}';")
                         rows = cur.fetchall()

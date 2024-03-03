@@ -93,7 +93,15 @@ def login():
                     hashed_password = rows[0][9]
                     if bcrypt.checkpw(password.encode('utf-8'), hashed_password.encode('utf-8')):
                         profile_info = {
-                            'sid': rows[0][0]
+                            'sid': rows[0][0],
+                            'email': rows[0][1],
+                            'name': rows[0][2],
+                            'phone': rows[0][4],
+                            'roll_number': rows[0][3],
+                            'college': rows[0][5],
+                            'department': rows[0][6],
+                            'year': rows[0][7],
+                            'type': rows[0][8]
                         }
                         access_token = create_access_token(identity=email, additional_headers=profile_info, expires_delta=False)
                         return jsonify({'access_token': access_token}), 200
@@ -106,7 +114,10 @@ def login():
                         hashed_password = rows[0][4]
                         if bcrypt.checkpw(password.encode('utf-8'), hashed_password.encode('utf-8')):
                             profile_info = {
-                                'oid': rows[0][0]
+                                'oid': rows[0][0],
+                                'email': rows[0][1],
+                                'name': rows[0][2],
+                                'phone': rows[0][3]
                             }
                             access_token = create_access_token(identity=email, additional_headers=profile_info, expires_delta=False)
                             return jsonify({'access_token': access_token}), 200
@@ -137,6 +148,7 @@ def login():
 @jwt_required()
 def profile():
     profile_info = get_jwt_header()
+    print(profile_info)
     try:
         with psycopg2.connect(**config) as conn:
             with conn.cursor() as cur:
@@ -217,7 +229,20 @@ def forgot_password():
                 cur.execute(f"SELECT * FROM STUDENT WHERE email='{email}';")
                 rows = cur.fetchall()
                 if not rows:
-                    return jsonify({'message': 'User does not exist'}), 404
+                    cur.execute(f"SELECT * FROM ORGANISERS WHERE email='{email}';")
+                    rows2 = cur.fetchall()
+                    if not rows2:
+                        return jsonify({'message': 'User does not exist'}), 404
+                    else:
+                        new_password = str(uuid4())[:8]
+                        print(new_password)
+                        hashed_password = bcrypt.hashpw(new_password.encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
+                        cur.execute(f"UPDATE ORGANISERS SET password='{hashed_password}' WHERE email='{email}';")
+                        print('Password updated')
+                        user_name = rows2[0][2]
+                        body = forgot_pass_body(new_password, user_name)
+                        send_mail(email, 'Forgot Password', body)
+                        return jsonify({'message': 'Password reset successfully'}), 200
                 else:
                     new_password = str(uuid4())[:8]
                     print(new_password)

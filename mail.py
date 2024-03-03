@@ -4,7 +4,7 @@ import os
 website_url = "https://dbms-frontend-flask.vercel.app"
 
 def isValidEmail(email):
-    email_regex = r'^[a-z0-9]+[\._]?[a-z0-9]+[@]\w+[.]\w+$'
+    email_regex = r'^[a-z0-9]+[\._]?[a-z0-9]+[@]\w+([.]\w{2,})+$'
     return re.match(email_regex, email)
 
 def forgot_pass_body(new_pass, name):
@@ -28,8 +28,9 @@ def send_mail(to, subject, body):
     sender_email = os.environ.get("MAIL_USERNAME")
     print(sender_email)
     print(os.environ.get("MAIL_PASSWORD"))
-
+    print(to)
     if not isValidEmail(to):
+        print("Invalid email")
         return False
     try:
         mail.send_message(
@@ -38,7 +39,10 @@ def send_mail(to, subject, body):
             recipients=[to],
             body=body
         )
+        print(f"body: {body}")
+        
         return True
     except Exception as e:
         print(e)
+        print("Error sending mail")
         return False
