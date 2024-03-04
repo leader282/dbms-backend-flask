@@ -39,6 +39,7 @@ def edit_student():
                 if(rows):
                     query = ""
                     for key, value in update_fields.items():
+                        value = value.replace("'", "''")
                         query += f"{key}='{value}', "
                     query = query[:-2]
                     cur.execute(f"UPDATE STUDENT SET " + query + f" WHERE sid='{sid}';")

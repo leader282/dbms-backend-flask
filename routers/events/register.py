@@ -36,8 +36,8 @@ def register_student(event_id):
 @jwt_required()
 def volunteer_student(event_id):
     profile_info = get_jwt_header()
-    info = request.get_json()['info']
-    role = request.get_json()['role']
+    info = request.get_json()['info'].replace("'", "''")
+    role = request.get_json()['role'].replace("'", "''")
     if profile_info.get('sid', 0) == 0 or profile_info['type'] == "external":
         return jsonify({'message': 'User doesnot have access here'}), 404
     try:

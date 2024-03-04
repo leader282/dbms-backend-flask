@@ -38,6 +38,7 @@ def edit_organiser():
                 if(rows):
                     query = ""
                     for key, value in update_fields.items():
+                        value = value.replace("'", "''")
                         query += f"{key}='{value}', "
                     query = query[:-2]
                     cur.execute(f"UPDATE ORGANISERS SET " + query + f" WHERE oid='{oid}';")

@@ -25,7 +25,7 @@ config  = load_config()
 def signup_student():
     data = request.get_json()
     hashed_password = bcrypt.hashpw(data['password'].encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
-    email = data['email']
+    email = data['email'].replace("'", "''")
     sid = '24ST' + str(uuid4())[:16]
     print(f"Password: {data['password']}, Hashed Password: {hashed_password}")
     try:
@@ -52,9 +52,8 @@ def signup_student():
 def signup_organiser():
     data = request.get_json()
     hashed_password = bcrypt.hashpw(data['password'].encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
-    email = data['email']
+    email = data['email'].replace("'", "''")
     oid = '24OR' + str(uuid4())[:16]
-
     try:
         with psycopg2.connect(**config) as conn:
             with conn.cursor() as cur:
@@ -78,7 +77,7 @@ def signup_organiser():
 @auth.route('/login', methods=['POST'])
 def login():
     data = request.get_json()
-    email = data['email']
+    email = data['email'].replace("'", "''")
     # print(email)
     password = data['password']
     # print(email, password)
@@ -197,7 +196,7 @@ def create_admin():
     # password is 'admin'
     data = request.get_json()
     admin_id = "24AD" + str(uuid4())[:16]
-    admin_email = data['email']
+    admin_email = data['email'].replace("'", "''")
     admin_password = data['password']
     admin_name = data['name']
     data = request.get_json()
@@ -221,7 +220,7 @@ def create_admin():
 @auth.route('/forgot_password', methods=['POST'])
 def forgot_password():
     data = request.get_json()
-    email = data['email']
+    email = data['email'].replace("'", "''")
     try:
         with psycopg2.connect(**config) as conn:
             with conn.cursor() as cur:

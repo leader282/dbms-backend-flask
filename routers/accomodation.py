@@ -59,12 +59,18 @@ def book_accomodation():
                     print(error)
                     return jsonify({'message': 'Error accomodating user'}), 404
                 # Executing the selected query
-                cur.execute(f"SELECT * FROM accomodation WHERE location='{data['location']}' and check_in = '{data['from']}' and check_out = '{data['to']}' and food_type = '{data['food_type']}';")
+                location_protection = data['location'].replace("'", "''")
+                food_type_protection = data['food_type'].replace("'", "''")
+                cur.execute(f"SELECT * FROM accomodation WHERE location='{location_protection}' and check_in = '{data['from']}' and check_out = '{data['to']}' and food_type = '{food_type_protection}';")
+                # cur.execute(f"SELECT * FROM accomodation WHERE location='{data['location']}' and check_in = '{data['from']}' and check_out = '{data['to']}' and food_type = '{data['food_type']}';")
                 rows = cur.fetchall()
                 if not rows:
                     logistics_id = str(uuid4())
                     try:
-                        cur.execute(f"INSERT INTO accomodation VALUES ('{logistics_id}', '{data['location']}', '{data['from']}', '{data['to']}', '{data['food_type']}', {int (data['payment'])});")
+                        location_protection = data['location'].replace("'", "''")
+                        food_type_protection = data['food_type'].replace("'", "''")
+                        cur.execute(f"INSERT INTO accomodation VALUES ('{logistics_id}', '{location_protection}', '{data['from']}', '{data['to']}', '{food_type_protection}', {int (data['payment'])});")
+                        # cur.execute(f"INSERT INTO accomodation VALUES ('{logistics_id}', '{data['location']}', '{data['from']}', '{data['to']}', '{data['food_type']}', {int (data['payment'])});")
                     except (Exception, psycopg2.DatabaseError) as error:
                         print(error)
                         return jsonify({'message': 'Error registering logistics'}), 404

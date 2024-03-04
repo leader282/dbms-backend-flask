@@ -64,7 +64,7 @@ def remove_student(id):
 def add_student():
     data = request.get_json()
     hashed_password = bcrypt.hashpw(data['password'].encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
-    email = data['email']
+    email = data['email'].replace("'", "''")
     sid = str(uuid4())[:16]
     # print(f"Password: {data['password']}, Hashed Password: {hashed_password}")
     try:
@@ -81,7 +81,14 @@ def add_student():
                     if(rows):
                         return jsonify({'message': 'Organiser already exists'}), 404
                     else:
-                        cur.execute(f"INSERT INTO STUDENT VALUES ('{sid}', '{email}', '{data['name']}', '{data['roll_number']}', '{data['phone']}', '{data['college']}', '{data['department']}', {(int)(data['year'])}, '{data['type']}', '{hashed_password}');")
+                        s_name= data['name'].replace("'", "''")
+                        s_roll_number= data['roll_number'].replace("'", "''")
+                        s_phone= data['phone'].replace("'", "''")
+                        s_college= data['college'].replace("'", "''")
+                        s_department= data['department'].replace("'", "''")
+                        s_type= data['type'].replace("'", "''")
+                        cur.execute(f"INSERT INTO STUDENT VALUES ('{sid}', '{email}', '{s_name}', '{s_roll_number}', '{s_phone}', '{s_college}', '{s_department}', {(int)(data['year'])}, '{s_type}', '{hashed_password}');")
+                        # cur.execute(f"INSERT INTO STUDENT VALUES ('{sid}', '{email}', '{data['name']}', '{data['roll_number']}', '{data['phone']}', '{data['college']}', '{data['department']}', {(int)(data['year'])}, '{data['type']}', '{hashed_password}');")
                         return jsonify({'message': 'User successfully registered'}), 200
     except (Exception, psycopg2.DatabaseError) as error:
         print(error)
@@ -109,6 +116,7 @@ def update_student():
                 if(rows):
                     query = ""
                     for key, value in update_fields.items():
+                        value = value.replace("'", "''")
                         query += f"{key}='{value}', "
                     # query += f"password='{hashed_password}', "
                     query = query[:-2]
