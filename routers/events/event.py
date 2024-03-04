@@ -118,8 +118,6 @@ def get_an_event(event_id):
                         event['registered'] = True
                     else:
                         event['registered'] = False
-                    # print(event)
-                    # print(profile_info)
                     if profile_info['type'] == 'internal':
                         cur.execute(f"SELECT * FROM VOLUNTEERS WHERE student_id='{sid}' AND event_id='{eid}';")
                         rows = cur.fetchall()

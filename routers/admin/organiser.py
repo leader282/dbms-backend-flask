@@ -110,7 +110,7 @@ def add_organiser():
     data = request.get_json()
     hashed_password = bcrypt.hashpw(data['password'].encode(
         'utf-8'), bcrypt.gensalt()).decode('utf-8')
-    email = data['email']
+    email = data['email'].replace("'", "''")  
     oid = str(uuid4())[:16]
     # print(f"data : {data}")
     try:
@@ -130,8 +130,9 @@ def add_organiser():
                         print("User already exists")
                         return jsonify({'message': 'User already exists'}), 404
                     else:
+                        name=data['name'].replace("'", "''")                        
                         cur.execute(
-                            f"INSERT INTO ORGANISERS VALUES ('{oid}', '{email}', '{data['name']}', '{data['phone']}', '{hashed_password}');")
+                            f"INSERT INTO ORGANISERS VALUES ('{oid}', '{email}', '{name}', '{data['phone']}', '{hashed_password}');")
                         return jsonify({'message': 'Organiser successfully registered'}), 200
     except (Exception, psycopg2.DatabaseError) as error:
         print(error)
@@ -159,6 +160,7 @@ def update_organiser():
                 if(rows):
                     query = ""
                     for key, value in update_fields.items():
+                        value = value.replace("'", "''")
                         query += f"{key}='{value}', "
                     query = query[:-2]
                     cur.execute(f"UPDATE ORGANISERS SET " + query + f" WHERE oid='{data['oid']}';")

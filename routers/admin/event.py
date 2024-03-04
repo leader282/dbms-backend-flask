@@ -64,9 +64,16 @@ def add_event():
                 else:
                     event_id = str(uuid4())
                     if data['type'] == 'competition':
-                        cur.execute(f"INSERT INTO EVENT VALUES ('{event_id}', '{data['name']}', '{data['type']}', '{data['info']}', '{data['start_date_time']}', '{data['end_date_time']}', '{data['location']}', '{data['first_prize']}' , '{data['second_prize']}', '{data['third_prize']}');")
+                        name = data['name'].replace("'", "''")
+                        info = data['info'].replace("'", "''")
+                        location = data['location'].replace("'", "''")
+                        cur.execute(f"INSERT INTO EVENT VALUES ('{event_id}', '{name}', '{data['type']}', '{info}', '{data['start_date_time']}', '{data['end_date_time']}', '{location}', '{data['first_prize']}', '{data['second_prize']}', '{data['third_prize']}');")
                     else:
-                        cur.execute(f"INSERT INTO EVENT VALUES ('{event_id}', '{data['name']}', '{data['type']}', '{data['info']}', '{data['start_date_time']}', '{data['end_date_time']}', '{data['location']}', NULL, NULL, NULL);")
+                        name = data['name'].replace("'", "''")
+                        info = data['info'].replace("'", "''")
+                        location = data['location'].replace("'", "''")
+                        cur.execute(f"INSERT INTO EVENT VALUES ('{event_id}', '{name}', '{data['type']}', '{info}', '{data['start_date_time']}', '{data['end_date_time']}', '{location}', NULL, NULL, NULL);")
+
                     return jsonify({'event_id': event_id}), 200
     except (Exception, psycopg2.DatabaseError) as error:
         print(error)
@@ -108,24 +115,20 @@ def update_event(id):
             with conn.cursor() as cur:
                 # Constructing the SQL query dynamically based on the available fields
                 if data['type'] != 'competition':
-                    query = ""
-                    for key, value in update_fields.items():
-                        if value == 'None':
-                            query += f'{key}=NULL, '
-                        else:
-                            query += f"{key}='{value}', "
-                    query = query[:-2]
-                    cur.execute('UPDATE EVENT SET ' + query + f" WHERE id='{id}';")
+                    query = ", ".join([f"{key} = %s" for key in update_fields])
+                    query += f" WHERE id = %s;"
+                    values = [update_fields[key] for key in update_fields] + [id]
                 else:
-                    query = ""
                     for key, value in update_fields.items():
                         if value == 'None':
                             return jsonify({'message': 'Competition cannot have null values'}), 402
-                        else:
-                            query += f"{key}='{value}', "
-                    query = query[:-2]
-                    cur.execute('UPDATE EVENT SET ' + query + f" WHERE id='{id}';")
+                    query = ", ".join([f"{key} = %s" for key in update_fields])
+                    query += f" WHERE id = %s;"
+                    values = [update_fields[key] for key in update_fields] + [id]
+                
+                cur.execute('UPDATE EVENT SET ' + query, values)
                 return jsonify({'message': 'Event successfully updated'}), 200
     except (Exception, psycopg2.DatabaseError) as error:
         print(error)
         return jsonify({'message': 'Error Updating event'}), 402
+
