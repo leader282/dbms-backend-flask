@@ -1,7 +1,7 @@
 import re
 import os
 
-website_url = "https://dbms-frontend-flask.vercel.app"
+website_url = "https://dbms-frontend-ten.vercel.app"
 
 def isValidEmail(email):
     email_regex = r'^[a-z0-9]+[\._]?[a-z0-9]+[@]\w+([.]\w{2,})+$'
